@@ -1,3 +1,5 @@
+/* eslint-disable no-var, @typescript-eslint/naming-convention */
+
 import './types/ncm'
 import '../js-framework/index'
 

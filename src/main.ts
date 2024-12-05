@@ -5,3 +5,5 @@ plugin.onConfig(() => {
   ReactDOM.render(Config(), element)
   return element
 })
+
+plugin.onLoad(() => {})
