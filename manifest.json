@@ -9,6 +9,6 @@
   "preview": "preview.png",
   "ncm3-compatible": false,
   "injects": {
-    "Main": [{ "file": "./dist/main.js" }]
+    "Main": [{ "file": "./main.js" }]
   }
 }

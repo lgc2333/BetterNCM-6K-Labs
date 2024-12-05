@@ -1,3 +1,5 @@
+import { backendSvrManager } from './server'
+import { websocketService } from './service'
 import { Config } from './ui/config'
 
 plugin.onConfig(() => {
@@ -6,4 +8,12 @@ plugin.onConfig(() => {
   return element
 })
 
-plugin.onLoad(() => {})
+plugin.onLoad(() => {
+  backendSvrManager.addEventListener('running', () => {
+    websocketService.reconnect()
+  })
+  backendSvrManager.addEventListener('stopped', () => {
+    websocketService.shutdown()
+  })
+  backendSvrManager.start()
+})

@@ -49,14 +49,16 @@ export interface Album {
   id: number
   name: string
   picUrl: string
-  transNames: string[]
+  transNames?: string[]
+  transName?: string[]
 }
 
 export interface Artist {
   alias: string[]
   id: number
   name: string
-  tns: string[]
+  tns?: string[]
+  trans?: string
 }
 
 export interface PlayingSongData {
@@ -150,11 +152,14 @@ export class DOMProvider implements Provider {
         : RepeatType.ALL
 
     const author = playing.data.artists
-      .map((v) => formatName(v.name, ...v.tns, ...v.alias))
+      .map((v) =>
+        formatName(v.name, ...(v.tns ?? []), ...(v.trans ? [v.trans] : []), ...v.alias),
+      )
       .join(' / ')
     const album = formatName(
       playing.data.album.name,
-      ...playing.data.album.transNames,
+      ...(playing.data.album.transNames ?? []),
+      ...(playing.data.album.transName ?? []),
       ...playing.data.album.alias,
     )
 

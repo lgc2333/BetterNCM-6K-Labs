@@ -1,3 +1,5 @@
+/* eslint-disable no-var, @typescript-eslint/naming-convention */
+
 // Generated from NCM 2.10.8
 
 declare var defaultStatus: any
@@ -70,7 +72,7 @@ declare var api: any
 declare var $changeCall: any
 declare var $changeEnv: any
 declare var $getAppDownUrl: any
-declare var loadedPlugins: any
+declare var loadedPlugins: Record<string, import('plugin').NCMPlugin>
 declare var timeIndicator: any
 declare var _: any
 declare var onProcessLyrics: any

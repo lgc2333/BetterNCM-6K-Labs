@@ -8,8 +8,11 @@
   "author": "student_2333 <lgc2333@126.com>",
   "license": "MIT",
   "scripts": {
-    "build:dev": "esbuild ./src/main.ts ./src/startup_script.ts --bundle --outdir=dist --sourcemap=inline --watch --target=chrome91",
-    "build": "esbuild ./src/main.ts ./src/startup_script.ts --bundle --minify --outdir=dist --target=chrome91",
+    "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
+    "build:js": "esbuild ./src/main.ts --bundle --minify --outdir=dist --target=chrome91",
+    "build:server": "go build -C ./backend-server -o ../dist/bncm-6k-labs-server.exe",
+    "build:dev": "yarn build:js:dev && yarn build:server && tsx ./scripts/post-build.ts",
+    "build": "yarn build:js && yarn build:server && tsx ./scripts/post-build.ts",
     "analyze": "esbuild --bundle ./src/main.ts --outdir=dist --minify --analyze=verbose"
   },
   "devDependencies": {
@@ -22,6 +25,7 @@
     "esbuild": "^0.24.0",
     "eslint": "^8.57.1",
     "prettier": "^3.3.3",
+    "tsx": "^4.19.2",
     "typescript": "^5.6.2"
   },
   "dependencies": {

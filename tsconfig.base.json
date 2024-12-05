@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "emitDeclarationOnly": true, // use esbuild
     "moduleResolution": "bundler",
-    // "types": ["node"],
+    "types": [],
     "allowJs": true,
     "checkJs": true,
     "removeComments": true,
