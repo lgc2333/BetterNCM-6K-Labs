@@ -40,8 +40,6 @@ export function isMessage(data: any): data is Message {
   return typeof data === 'object' && data !== null && 'type' in data && 'data' in data
 }
 
-// TODO 退出时，启动时残留进程处理
-
 export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
   public ws?: WebSocket
 

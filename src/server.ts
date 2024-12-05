@@ -29,6 +29,8 @@ export type BackendSvrManagerEventMap = {
   stopped: CustomEvent<undefined>
 }
 
+// TODO 退出时，启动时残留进程处理
+
 export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMap> {
   private task: Promise<void> | null = null
 
