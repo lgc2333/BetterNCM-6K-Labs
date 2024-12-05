@@ -1,0 +1,24 @@
+{
+  "name": "better-ncm-6k-labs",
+  "version": "0.1.0",
+  "packageManager": "yarn@4.5.3",
+  "description": "A BetterNCM plugin provides a service for 6K Labs use",
+  "main": "index.js",
+  "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
+  "author": "student_2333 <lgc2333@126.com>",
+  "license": "MIT",
+  "scripts": {
+    "build:dev": "esbuild ./src/main.ts ./src/startup_script.ts --bundle --outdir=dist --sourcemap=inline --watch --target=chrome91",
+    "build": "esbuild ./src/main.ts ./src/startup_script.ts --bundle --minify --outdir=dist --target=chrome91",
+    "analyze": "esbuild --bundle ./src/main.ts --outdir=dist --minify --analyze=verbose"
+  },
+  "devDependencies": {
+    "@cordisjs/eslint-config": "^1.1.1",
+    "@types/react": "^18.0.29",
+    "@types/react-dom": "^18.0.11",
+    "esbuild": "^0.24.0",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.2"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "manifest_version": 1,
+  "name": "6k-labs",
+  "version": "0.0.1",
+  "author": "student_2333",
+  "description": "A BetterNCM plugin provides a service for 6K Labs use",
+  "betterncm_version": ">=0.2.5",
+  "preview": "preview.png",
+  "injects": {
+    "Main": [
+      {
+        "file": "./dist/main.js"
+      }
+    ]
+  }
+}
