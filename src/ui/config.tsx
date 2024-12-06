@@ -149,6 +149,7 @@ export function Config() {
         <p>
           - 因为本废物写的状态管理代码太烂，上面两个重启和停止的按钮最好不要点太快 QAQ
         </p>
+        <p>- 后端服务器全部代码都是交给 GitHub Copilot 写的，我不会写 Golang 啊 xwx</p>
       </div>
 
       <h1 style={{ fontSize: '20px' }}>鸣谢</h1>
