@@ -1,19 +1,27 @@
-import { backendSvrManager } from './server'
+import { backendSvrManager } from './backend'
 import { websocketService } from './service'
-import { Config } from './ui/config'
+import { ConfigWrapper } from './ui/config'
 
 plugin.onConfig(() => {
   const element = document.createElement('div')
-  ReactDOM.render(Config(), element)
+  ReactDOM.render(ConfigWrapper(), element)
   return element
 })
 
 plugin.onLoad(() => {
-  backendSvrManager.addEventListener('running', () => {
+  backendSvrManager.addEventListener('started', () => {
     websocketService.reconnect()
+  })
+  backendSvrManager.addEventListener('beforeKill', () => {
+    websocketService.shutdown()
   })
   backendSvrManager.addEventListener('stopped', () => {
     websocketService.shutdown()
   })
-  backendSvrManager.start()
+  backendSvrManager.restart()
 })
+
+// not working
+// window.addEventListener('beforeunload', () => {
+//   backendSvrManager.kill()
+// })

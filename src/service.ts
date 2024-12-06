@@ -45,12 +45,16 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
 
   private _stopped = true
 
+  public get connected() {
+    return this.ws?.readyState === WebSocket.OPEN
+  }
+
   public get stopped() {
     return this._stopped
   }
 
   protected closeListener = (ev: CloseEvent) => {
-    this.dispatchEvent(new CustomEvent('close'))
+    this.dispatchCustomEvent('close', {})
     if (this._stopped) return
     // eslint-disable-next-line no-console
     console.log(
@@ -94,16 +98,16 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
     })
   }
 
-  public get connected() {
-    return this.ws?.readyState === WebSocket.OPEN
-  }
-
   public shutdown() {
     this._stopped = true
     if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
       this.ws.removeEventListener('close', this.closeListener)
       this.ws.close()
+      // eslint-disable-next-line no-console
+      console.log('Connection manually shutdown')
     }
+    this.dispatchCustomEvent('close', {})
+    this.ws = undefined
   }
 
   public reconnect() {
@@ -112,7 +116,7 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
     this.ws = new WebSocket(`ws://localhost:${SERVER_PORT}/backend-connect`)
     this.ws.addEventListener('close', this.closeListener)
     this.ws.addEventListener('open', () => {
-      this.dispatchEvent(new CustomEvent('open'))
+      this.dispatchCustomEvent('open', {})
       // eslint-disable-next-line no-console
       console.log('Connected to backend server')
     })
