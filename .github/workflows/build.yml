@@ -49,3 +49,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: 'upload dist [skip-ci]'
           SQUASH_HISTORY: true
+          CLEAR_GLOBS_FILE: .github/.build-remove
