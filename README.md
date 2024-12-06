@@ -7,4 +7,4 @@ Inspired by [Widdit/now-playing-service](https://github.com/Widdit/now-playing-s
 
 Thanks to [BetterNCM/InfinityLink](https://github.com/BetterNCM/InfinityLink) and [std-microblock/LiveSongPlayer-MKII](https://github.com/std-microblock/LiveSongPlayer-MKII)
 
-`backend_server` by GitHub Copilot
+`backend-server` by GitHub Copilot
