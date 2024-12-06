@@ -524,6 +524,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/node@npm:^22.10.1":
+  version: 22.10.1
+  resolution: "@types/node@npm:22.10.1"
+  dependencies:
+    undici-types: "npm:~6.20.0"
+  checksum: 10c0/0fbb6d29fa35d807f0223a4db709c598ac08d66820240a2cd6a8a69b8f0bc921d65b339d850a666b43b4e779f967e6ed6cf6f0fca3575e08241e6b900364c234
+  languageName: node
+  linkType: hard
+
 "@types/prop-types@npm:*":
   version: 15.7.13
   resolution: "@types/prop-types@npm:15.7.13"
@@ -884,6 +893,7 @@ __metadata:
   resolution: "better-ncm-6k-labs@workspace:."
   dependencies:
     "@cordisjs/eslint-config": "npm:^1.1.1"
+    "@types/node": "npm:^22.10.1"
     "@types/react": "npm:^16.14.0"
     "@types/react-dom": "npm:^16.9.24"
     esbuild: "npm:^0.24.0"
@@ -3524,6 +3534,13 @@ __metadata:
     has-symbols: "npm:^1.0.3"
     which-boxed-primitive: "npm:^1.0.2"
   checksum: 10c0/81ca2e81134167cc8f75fa79fbcc8a94379d6c61de67090986a2273850989dd3bae8440c163121b77434b68263e34787a675cbdcb34bb2f764c6b9c843a11b66
+  languageName: node
+  linkType: hard
+
+"undici-types@npm:~6.20.0":
+  version: 6.20.0
+  resolution: "undici-types@npm:6.20.0"
+  checksum: 10c0/68e659a98898d6a836a9a59e6adf14a5d799707f5ea629433e025ac90d239f75e408e2e5ff086afc3cace26f8b26ee52155293564593fbb4a2f666af57fc59bf
   languageName: node
   linkType: hard
 

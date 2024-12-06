@@ -124,7 +124,12 @@ export function Config() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <p>
           搭配{' '}
-          <a onClick={() => betterncm.ncm.openUrl('https://6klabs.com')}>6klabs.com</a>{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() => betterncm.ncm.openUrl('https://6klabs.com')}
+          >
+            6klabs.com
+          </a>{' '}
           使用
         </p>
         <p>
@@ -144,6 +149,55 @@ export function Config() {
         <p>
           - 因为本废物写的状态管理代码太烂，上面两个重启和停止的按钮最好不要点太快 QAQ
         </p>
+      </div>
+
+      <h1 style={{ fontSize: '20px' }}>鸣谢</h1>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <p>
+          - 灵感来源：{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() =>
+              betterncm.ncm.openUrl('https://github.com/Widdit/now-playing-service')
+            }
+          >
+            Widdit/now-playing-service
+          </a>
+        </p>
+        <p>
+          - 服务提供：{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() => betterncm.ncm.openUrl('https://6klabs.com')}
+          >
+            6K Labs
+          </a>
+        </p>
+        <p>
+          - 技术参考：{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() =>
+              betterncm.ncm.openUrl('https://github.com/BetterNCM/InfinityLink')
+            }
+          >
+            BetterNCM/InfinityLink
+          </a>{' '}
+          &{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() =>
+              betterncm.ncm.openUrl(
+                'https://github.com/std-microblock/LiveSongPlayer-MKII',
+              )
+            }
+          >
+            std-microblock/LiveSongPlayer-MKII
+          </a>
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <p>最后祝各位使用愉快吧~</p>
       </div>
 
