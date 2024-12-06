@@ -26,15 +26,19 @@ jobs:
         with:
           node-version: lts/*
 
-      - run: npm install yarn -g
+      - name: Install Yarn
+        run: npm install yarn -g
 
-      - run: yarn
+      - name: Install Node dependencies
+        run: yarn
 
-      - run: |-
+      - name: Install Go dependencies
+        run: |-
           cd backend-server
           go get .
 
-      - run: yarn build
+      - name: Build
+        run: yarn build
 
       - name: Deploy
         uses: s0/git-publish-subdir-action@develop
@@ -42,6 +46,7 @@ jobs:
           REPO: self
           BRANCH: dist
           FOLDER: dist
+          TARGET_DIR: dist
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MESSAGE: 'upload dist [skip-ci]'
           SQUASH_HISTORY: true
