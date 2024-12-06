@@ -54,7 +54,7 @@ export function Config() {
         width: '100%',
       }}
     >
-      <h1 style={{ fontSize: '24px' }}>服务状态</h1>
+      <h1 style={{ fontSize: '20px' }}>服务状态</h1>
 
       <div
         style={{
@@ -117,6 +117,45 @@ export function Config() {
           onClick={() => backendSvrManager.kill()}
         >
           停止服务
+        </a>
+      </div>
+
+      <h1 style={{ fontSize: '20px' }}>使用方式</h1>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <p>
+          搭配{' '}
+          <a onClick={() => betterncm.ncm.openUrl('https://6klabs.com')}>6klabs.com</a>{' '}
+          使用
+        </p>
+        <p>
+          登录后进入后台面板，点击 Widgets，再点击 Amuse，之后选择 Youtube Music，复制
+          URL 后向 OBS 添加浏览器源即可，你也可以直接在浏览器中打开预览效果
+        </p>
+        <p>下方 Widget Settings 中还可以修改 Amuse 的样式</p>
+      </div>
+
+      <h1 style={{ fontSize: '20px' }}>碎碎念</h1>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <p>一些注意事项：</p>
+        <p>
+          - 由于 BetterNCM API 限制，后端服务无法随网易云关闭，
+          如果不停止会一直留在后台，不过资源占用不高，不介意可以不用管它
+        </p>
+        <p>
+          - 因为本废物写的状态管理代码太烂，上面两个重启和停止的按钮最好不要点太快 QAQ
+        </p>
+        <p>最后祝各位使用愉快吧~</p>
+      </div>
+
+      <div style={{ display: 'flex', gap: '4px' }}>
+        <a
+          className="false u-ibtn5 u-ibtnsz8 cmd-button cmd-button-outlineSec cmd-button-size-m cmd-button-outline-sec button-item"
+          style={{ display: 'flex', alignItems: 'center', background: 'transparent' }}
+          onClick={() =>
+            betterncm.ncm.openUrl('https://github.com/lgc2333/BetterNCM-6K-Labs/issues')
+          }
+        >
+          前往 GitHub Issues 反馈 Bug 或提出建议
         </a>
       </div>
     </div>
