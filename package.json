@@ -12,14 +12,16 @@
     "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
     "build:js": "esbuild ./src/main.ts --bundle --minify --outdir=dist --target=chrome91",
     "build:server": "go build -C ./backend-server -o ../dist/bncm-6k-labs-server.exe",
-    "build:dev": "yarn build:js:dev && yarn build:server && tsx ./scripts/post-build.ts",
-    "build": "yarn build:js && yarn build:server && tsx ./scripts/post-build.ts",
+    "build:dev": "yarn build:js:dev && yarn build:server && tsx ../../scripts/post-build.ts",
+    "build": "yarn build:js && yarn build:server && tsx ../../scripts/post-build.ts",
+    "apply": "tsx ../../scripts/apply.ts",
     "analyze": "esbuild --bundle ./src/main.ts --outdir=dist --minify --analyze=verbose"
   },
   "devDependencies": {
     "@types/node": "^22.10.1",
     "@types/react": "^16.14.0",
     "@types/react-dom": "^16.9.24",
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.24.0",
+    "tsx": "^4.19.2"
   }
 }
