@@ -39,7 +39,6 @@ export async function waitOutFile(
   const read = async () =>
     (
       await betterncm.fs.readFileText(filePath).catch((e) => {
-        // eslint-disable-next-line no-console
         console.error(e)
         return ''
       })
@@ -54,7 +53,6 @@ export async function waitOutFile(
   }
 
   if (shouldDelete) {
-    // eslint-disable-next-line no-console
     betterncm.fs.remove(filePath).catch(console.error)
   }
   return res
@@ -96,7 +94,6 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
     this.task = this.waitForStop().then(
       () => this.promiseEndCallback(),
       (e) => {
-        // eslint-disable-next-line no-console
         console.error(e)
         return this.promiseEndCallback()
       },
@@ -113,7 +110,6 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
 
   public static async killAllByName() {
     await betterncm.app.exec(`taskkill /F /IM ${SERVER_FILENAME}`)
-    // eslint-disable-next-line no-console
     console.log('Server killed (by name)')
   }
 
@@ -129,7 +125,6 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
   public static async newProc(): Promise<BackendSvrProc> {
     const restored = await this.restoreProc()
     if (restored) {
-      // eslint-disable-next-line no-console
       console.log('Server already running, skip start')
       return restored
     }
@@ -148,7 +143,6 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
         `"`,
     )
     const pid = await waitOutFile(pidFilePath, { shouldDelete: false })
-    // eslint-disable-next-line no-console
     console.log('Server started')
     return new BackendSvrProc(pid)
   }
@@ -187,7 +181,6 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
     await betterncm.app.exec(`taskkill /F /PID ${this.pid}`)
     await this.waitForStop()
     this.dispatchCustomEvent('stopped', {})
-    // eslint-disable-next-line no-console
     console.log('Server killed')
   }
 }
@@ -216,14 +209,12 @@ export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMa
   protected stoppedCallback = () => {
     if (this._stopped) {
       this._stopType = StopType.MANUALLY
-      // eslint-disable-next-line no-console
       console.log('Server stopped manually')
     } else {
       const now = Date.now()
       if (now - this.lastStartTime < DEBOUNCE_TIME) {
         this._stopped = true
         this._stopType = StopType.ACCIDENTALLY_TOO_SOON
-        // eslint-disable-next-line no-console
         console.log('Server stopped too soon, will not restart')
       } else {
         this._stopType = StopType.ACCIDENTALLY
@@ -232,7 +223,6 @@ export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMa
     this.dispatchCustomEvent('stopped', { detail: this._stopType })
 
     if (this._stopType === StopType.ACCIDENTALLY) {
-      // eslint-disable-next-line no-console
       console.log(`Server accidentally stopped, will retry in ${RETRY_TIME} ms`)
       setTimeout(() => {
         if (!this._stopped) this.restart()
@@ -263,7 +253,6 @@ export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMa
       this.proc = await BackendSvrProc.newProc()
     } catch (e) {
       this._starting = false
-      // eslint-disable-next-line no-console
       console.error(e)
       this.kill()
       this._stopType = StopType.START_FAILED

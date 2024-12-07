@@ -56,7 +56,6 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
   protected closeListener = (ev: CloseEvent) => {
     this.dispatchCustomEvent('close', {})
     if (this._stopped) return
-    // eslint-disable-next-line no-console
     console.log(
       `Connection closed, reconnect in ${RETRY_TIME}ms.` +
         ` code: ${ev.code}, reason: ${ev.reason}`,
@@ -78,13 +77,11 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
     try {
       data = JSON.parse(ev.data)
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error('Failed to parse message', ev.data)
       return
     }
 
     if (!isMessage(data)) {
-      // eslint-disable-next-line no-console
       console.error('Invalid message', data)
       return
     }
@@ -103,7 +100,6 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
     if (this.ws && this.ws.readyState !== WebSocket.CLOSED) {
       this.ws.removeEventListener('close', this.closeListener)
       this.ws.close()
-      // eslint-disable-next-line no-console
       console.log('Connection manually shutdown')
     }
     this.dispatchCustomEvent('close', {})
@@ -117,7 +113,6 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
     this.ws.addEventListener('close', this.closeListener)
     this.ws.addEventListener('open', () => {
       this.dispatchCustomEvent('open', {})
-      // eslint-disable-next-line no-console
       console.log('Connected to backend server')
     })
     this.ws.addEventListener('message', this.handle)
