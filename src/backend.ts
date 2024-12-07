@@ -77,7 +77,7 @@ export type BackendSvrProcEventMap = {
 }
 
 export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
-  protected task: Promise<void> | null
+  protected task: Promise<void> | null = null
 
   public get running(): boolean {
     return !!this.task
@@ -91,13 +91,19 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
 
   constructor(public readonly pid: string) {
     super()
-    this.task = this.waitForStop().then(
-      () => this.promiseEndCallback(),
-      (e) => {
-        console.error(e)
-        return this.promiseEndCallback()
-      },
-    )
+  }
+
+  public start(beforeCheckDelay: number = 0) {
+    this.task = betterncm.utils
+      .delay(beforeCheckDelay)
+      .then(() => this.waitForStop())
+      .then(
+        () => this.promiseEndCallback(),
+        (e) => {
+          console.error(e)
+          return this.promiseEndCallback()
+        },
+      )
   }
 
   public static async getStoredPID(): Promise<string | undefined> {
@@ -117,12 +123,15 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
     const pid = await this.getStoredPID()
     if (pid) {
       const p = new BackendSvrProc(pid)
-      if (await p.checkRunning()) return p
+      if (await p.checkRunning()) {
+        p.start(DETECT_DELAY)
+        return p
+      }
     }
     return undefined
   }
 
-  public static async newProc(): Promise<BackendSvrProc> {
+  public static async startNewProc(): Promise<BackendSvrProc> {
     const restored = await this.restoreProc()
     if (restored) {
       console.log('Server already running, skip start')
@@ -143,8 +152,10 @@ export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
         `"`,
     )
     const pid = await waitOutFile(pidFilePath, { shouldDelete: false })
+    const proc = new BackendSvrProc(pid)
+    proc.start()
     console.log('Server started')
-    return new BackendSvrProc(pid)
+    return proc
   }
 
   public async checkRunning(): Promise<boolean> {
@@ -250,7 +261,7 @@ export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMa
     this._stopType = StopType.MANUALLY
     this.lastStartTime = Date.now()
     try {
-      this.proc = await BackendSvrProc.newProc()
+      this.proc = await BackendSvrProc.startNewProc()
     } catch (e) {
       this._starting = false
       console.error(e)
