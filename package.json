@@ -1,8 +1,9 @@
 {
   "name": "better-ncm-6k-labs",
-  "version": "0.1.0",
   "packageManager": "yarn@4.5.3",
-  "description": "A BetterNCM plugin provides a service for 6K Labs use",
+  "private": true,
+  "version": "0",
+  "description": "",
   "main": "index.js",
   "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
   "author": "student_2333 <lgc2333@126.com>",
@@ -16,14 +17,9 @@
     "analyze": "esbuild --bundle ./src/main.ts --outdir=dist --minify --analyze=verbose"
   },
   "devDependencies": {
-    "@cordisjs/eslint-config": "^1.1.1",
     "@types/node": "^22.10.1",
     "@types/react": "^16.14.0",
     "@types/react-dom": "^16.9.24",
-    "esbuild": "^0.24.0",
-    "eslint": "^8.57.1",
-    "prettier": "^3.3.3",
-    "tsx": "^4.19.2",
-    "typescript": "^5.6.2"
+    "esbuild": "^0.24.0"
   }
 }
