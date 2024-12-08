@@ -116,26 +116,36 @@ export function parseTimeStr(time: string): number {
 export const formatName = (name: string, ...restNames: string[]) =>
   restNames.length === 0 ? name : `${name}（${restNames[0]}）`
 
+export function elemVisible(e: HTMLElement): boolean {
+  const style = window.getComputedStyle(e)
+  return style.display !== 'none' && style.visibility !== 'hidden'
+}
+
 export class DOMProvider implements Provider {
   query(): Query {
     const playing: PlayingSong | null = betterncm.ncm.getPlayingSong()
     if (!playing) return emptyQuery
 
+    const currentPlayerElem = [
+      ...document.querySelectorAll<HTMLDivElement>('.m-player'),
+    ].find(elemVisible)
+    if (!currentPlayerElem) return emptyQuery
+
     const isPaused = playing.state === 1
 
     const volumePercent = parseFloat(
-      document
-        .querySelector<HTMLDivElement>('.m-player .prg-spk .has.j-flag')!
+      currentPlayerElem
+        .querySelector<HTMLDivElement>('.prg-spk .has.j-flag')!
         .style.height.replace(/%$/, ''),
     )
 
     const seekbarCurrentPositionHuman =
-      document.querySelector<HTMLTimeElement>('.m-player time.now')!.innerText
+      currentPlayerElem.querySelector<HTMLTimeElement>('time.now')!.innerText
     const seekbarCurrentPosition = parseTimeStr(seekbarCurrentPositionHuman)
     const statePercent =
       parseFloat(
-        document
-          .querySelector<HTMLDivElement>('.m-player .prg-ply .has')!
+        currentPlayerElem
+          .querySelector<HTMLDivElement>('.prg-ply .has')!
           .style.width.replace(/%$/, ''),
       ) / 100
 
@@ -143,11 +153,11 @@ export class DOMProvider implements Provider {
       ? LikeStatus.LIKE
       : LikeStatus.INDIFFERENT
 
-    const repeatType = document.querySelector<HTMLDivElement>(
-      '.m-player type.type-order',
+    const repeatType = currentPlayerElem.querySelector<HTMLDivElement>(
+      'type.type-order',
     )
       ? RepeatType.NONE
-      : document.querySelector<HTMLDivElement>('.m-player type.type-one')
+      : currentPlayerElem.querySelector<HTMLDivElement>('type.type-one')
         ? RepeatType.ONE
         : RepeatType.ALL
 
@@ -171,7 +181,7 @@ export class DOMProvider implements Provider {
     const cover = playing.data.album.picUrl
 
     const durationHuman =
-      document.querySelector<HTMLTimeElement>('.m-player time.all')!.innerText
+      currentPlayerElem.querySelector<HTMLTimeElement>('time.all')!.innerText
     const duration = parseTimeStr(durationHuman)
 
     const id = `${playing.data.id}`
