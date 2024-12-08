@@ -12,6 +12,10 @@ jobs:
   build-n-publish:
     name: Build and publish
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go_os: [windows]
+        go-arch: [amd64]
 
     steps:
       - name: Checkout workspace
@@ -50,6 +54,9 @@ jobs:
           echo "FOLDER_NAME=${FOLDER_NAME}" >> $GITHUB_ENV
 
       - name: Build
+        env:
+          GOOS: ${{ matrix.go_os }}
+          GOARCH: ${{ matrix.go-arch }}
         run: |-
           cd packages/${FOLDER_NAME}
           yarn build
