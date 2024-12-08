@@ -101,20 +101,14 @@ export const emptyQuery: Query = {
   },
 }
 
-export const reactInstance = (e: HTMLElement): any => {
-  const k = Object.keys(e).find((v) =>
-    v.includes('__reactInternalInstance'),
-  )! as keyof typeof e
-  return e[k]
-}
-
 export function parseTimeStr(time: string): number {
   const [min, sec] = time.split(':').map((x) => parseInt(x, 10))
   return min * 60 + sec
 }
 
-export const formatName = (name: string, ...restNames: string[]) =>
-  restNames.length === 0 ? name : `${name}（${restNames[0]}）`
+export function formatName(name: string, ...restNames: string[]) {
+  return restNames.length === 0 ? name : `${name}（${restNames[0]}）`
+}
 
 export function elemVisible(e: HTMLElement): boolean {
   const style = window.getComputedStyle(e)
