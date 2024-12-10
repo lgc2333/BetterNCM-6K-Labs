@@ -32,6 +32,11 @@ jobs:
           echo "FOLDER_NAME=${FOLDER_NAME}"
           echo "FOLDER_NAME=${FOLDER_NAME}" >> $GITHUB_ENV
 
+      - name: Update current package submodule
+        run: |-
+          git switch ${{ github.ref_name }}
+          git pull
+
       - uses: actions/setup-go@v5
         with:
           go-version: 1.23
