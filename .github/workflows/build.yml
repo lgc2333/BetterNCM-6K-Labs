@@ -1,4 +1,3 @@
-
 name: Build and publish
 
 on:
@@ -33,11 +32,10 @@ jobs:
           echo "FOLDER_NAME=${FOLDER_NAME}"
           echo "FOLDER_NAME=${FOLDER_NAME}" >> $GITHUB_ENV
 
-      - name: Update current package submodule
+      - name: Checkout current package submodule at specific commit
         run: |-
           cd packages/${FOLDER_NAME}
-          git switch ${{ github.ref_name }}
-          git pull
+          git checkout ${{ github.sha }}
 
       - uses: actions/setup-go@v5
         with:
