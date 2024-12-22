@@ -1,48 +1,54 @@
-import { backendSvrManager, StopType } from '../backend'
+import { backendSvrManager, StopType, TOO_SOON_TIME } from '../backend'
 import { SERVER_PORT, websocketService } from '../service'
 
 export function Config() {
-  const [serviceState, setServiceState] = React.useState(websocketService.connected)
+  const [serviceConnected, setServiceConnecting] = React.useState(
+    websocketService.connected,
+  )
   const [serviceStopped, setServiceStopped] = React.useState(websocketService.stopped)
-  const [serverState, setServerState] = React.useState(backendSvrManager.running)
-  const [serverStopped, setServerStopped] = React.useState(backendSvrManager.stopped)
-  const [serverStopType, setServerStopType] = React.useState(backendSvrManager.stopType)
+  const [backendRunning, setServerRunning] = React.useState(
+    backendSvrManager.processRunning,
+  )
+  const [backendStopped, setServerStopped] = React.useState(backendSvrManager.stopped)
+  const [backendStopType, setServerStopType] = React.useState(
+    backendSvrManager.stopType,
+  )
 
-  const handleServiceOpen = React.useCallback(() => {
-    setServiceState(true)
+  const handleServiceStateChange = React.useCallback(() => {
+    setServiceConnecting(websocketService.connected)
     setServiceStopped(websocketService.stopped)
   }, [])
 
-  const handleServiceClose = React.useCallback(() => {
-    setServiceState(false)
-    setServiceStopped(websocketService.stopped)
-  }, [])
-
-  const handleServerRun = React.useCallback(() => {
-    setServerState(true)
-    setServerStopped(backendSvrManager.stopped)
-    setServerStopType(backendSvrManager.stopType)
-  }, [])
-
-  const handleServerStop = React.useCallback(() => {
-    setServerState(false)
+  const handleBackendStateChange = React.useCallback(() => {
+    setServerRunning(backendSvrManager.processRunning)
     setServerStopped(backendSvrManager.stopped)
     setServerStopType(backendSvrManager.stopType)
   }, [])
 
   React.useEffect(() => {
-    websocketService.addEventListener('open', handleServiceOpen)
-    websocketService.addEventListener('close', handleServiceClose)
-    backendSvrManager.addEventListener('started', handleServerRun)
-    backendSvrManager.addEventListener('stopped', handleServerStop)
+    websocketService.addEventListener('open', handleServiceStateChange)
+    websocketService.addEventListener('close', handleServiceStateChange)
+    backendSvrManager.addEventListener('starting', handleBackendStateChange)
+    backendSvrManager.addEventListener('started', handleBackendStateChange)
+    backendSvrManager.addEventListener('beforeKill', handleBackendStateChange)
+    backendSvrManager.addEventListener('stopped', handleBackendStateChange)
 
     return () => {
-      websocketService.removeEventListener('open', handleServiceOpen)
-      websocketService.removeEventListener('close', handleServiceClose)
-      backendSvrManager.removeEventListener('started', handleServerRun)
-      backendSvrManager.removeEventListener('stopped', handleServerStop)
+      websocketService.removeEventListener('open', handleServiceStateChange)
+      websocketService.removeEventListener('close', handleServiceStateChange)
+      backendSvrManager.removeEventListener('starting', handleBackendStateChange)
+      backendSvrManager.removeEventListener('started', handleBackendStateChange)
+      backendSvrManager.removeEventListener('beforeKill', handleBackendStateChange)
+      backendSvrManager.removeEventListener('stopped', handleBackendStateChange)
     }
-  }, [handleServiceOpen, handleServiceClose, handleServerRun, handleServerStop])
+  }, [handleServiceStateChange, handleBackendStateChange])
+
+  const stopTypeTipMap = {
+    [StopType.MANUALLY]: '程序未启动',
+    [StopType.ACCIDENTALLY]: '程序意外退出',
+    [StopType.ACCIDENTALLY_TOO_SOON]: `程序在过短时间内意外退出 (${TOO_SOON_TIME}ms)`,
+    [StopType.START_FAILED]: '启动失败',
+  }
 
   return (
     <div
@@ -67,20 +73,21 @@ export function Config() {
       >
         <div>后端接口服务</div>
         <div style={{ textAlign: 'right' }}>
-          <span style={{ color: serverState ? 'green' : 'red' }}>
-            {serverState
+          <span style={{ color: backendRunning ? 'green' : 'red' }}>
+            {backendRunning
               ? '运行中'
-              : serverStopped
-                ? serverStopType === StopType.MANUALLY
+              : backendStopped
+                ? backendStopType === StopType.MANUALLY
                   ? '未运行'
                   : '启动失败'
                 : '尝试重启中'}
           </span>
-          {serverStopped && serverStopType !== StopType.MANUALLY ? (
+          {backendStopped && backendStopType !== StopType.MANUALLY ? (
             <>
               <br />
               <span style={{ color: 'red' }}>
-                程序异常退出，请检查是否 {SERVER_PORT} 端口被占用或出现其他问题
+                {stopTypeTipMap[backendStopType]}，请检查是否 {SERVER_PORT}{' '}
+                端口被占用或出现其他问题
               </span>
             </>
           ) : null}
@@ -97,8 +104,8 @@ export function Config() {
       >
         <div>前端信息查询服务</div>
         <div>
-          <span style={{ color: serviceState ? 'green' : 'red' }}>
-            {serviceState ? '已连接' : serviceStopped ? '已停止' : '重连中'}
+          <span style={{ color: serviceConnected ? 'green' : 'red' }}>
+            {serviceConnected ? '已连接' : serviceStopped ? '已停止' : '重连中'}
           </span>
         </div>
       </div>

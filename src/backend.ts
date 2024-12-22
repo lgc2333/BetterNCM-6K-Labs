@@ -1,199 +1,95 @@
-import { TypedEventTarget } from './utils'
+import {
+  ensureTmpDir,
+  escapePowershellInput,
+  runPowershellWithOutput,
+  TypedEventTarget,
+  waitForFunction,
+} from './utils'
 
-export function parseTasklistCSV(csv: string): string[][] {
-  return csv.split('\n').map((line) => {
-    const x = line.split('","')
-    x[0] = x[0].replace(/^"/, '')
-    x[x.length - 1] = x[x.length - 1].replace(/"$/, '')
-    return x
-  })
-}
-
-export async function getTmpDir(): Promise<string> {
-  const path = `${await betterncm.app.getDataPath()}/6K-Labs-Temp`
-  if (!(await betterncm.fs.exists(path))) {
-    await betterncm.fs.mkdir(path)
-  }
-  return path
-}
-
-export async function genTmpFilePath(): Promise<string> {
-  return `${await getTmpDir()}/${Date.now()}.tmp`
-}
-
-export async function waitOutFile(
-  filePath: string,
-  opts: {
-    delay?: number
-    times?: number
-    shouldDelete?: boolean
-  } = {},
-): Promise<string> {
-  const { delay = 200, times = 15, shouldDelete = true } = opts
-  for (let i = 0; ; i += 1) {
-    if (i >= times) throw new Error('waitOutFile timeout')
-    await betterncm.utils.delay(delay)
-    if (await betterncm.fs.exists(filePath)) break
-  }
-
-  const read = async () =>
-    (
-      await betterncm.fs.readFileText(filePath).catch((e) => {
-        console.error(e)
-        return ''
-      })
-    ).trim()
-
-  let res: string = ''
-  // 有时读文件会 500，怀疑在文件被占用时读取，所以尝试多次
-  for (let i = 0; !res && i < times; i += 1) {
-    res = await read()
-    if (res) break
-    await betterncm.utils.delay(delay)
-  }
-
-  if (shouldDelete) {
-    betterncm.fs.remove(filePath).catch(console.error)
-  }
-  return res
-}
-
-export function escapePathArg(arg: string): string {
-  return arg.replaceAll('\\', '/') // .replaceAll(`'`, `\\\\'`)
-}
-
-export const SERVER_FILENAME = 'bncm-6k-labs-server.exe'
-export const DEBOUNCE_TIME = 10000
+export const SERVER_PROCESS_NAME = 'bncm-6k-labs-server'
+export const SERVER_FILENAME = `${SERVER_PROCESS_NAME}.exe`
+export const TOO_SOON_TIME = 10000
 export const RETRY_TIME = 3000
 export const DETECT_DELAY = 2000
-export const SERVER_PID_FILE = 'bncm-6k-labs-server.pid'
 
-export async function getPIDFilePath(): Promise<string> {
-  return `${await getTmpDir()}/${SERVER_PID_FILE}`
+export interface QueryProcessOptions {
+  name?: string
+  id?: number
 }
 
-export type BackendSvrProcEventMap = {
-  stopped: CustomEvent<undefined>
+export interface ProcessInfo {
+  processName: string
+  id: number
 }
 
-export class BackendSvrProc extends TypedEventTarget<BackendSvrProcEventMap> {
-  protected task: Promise<void> | null = null
-
-  public get running(): boolean {
-    return !!this.task
+export async function queryProcess(opt: QueryProcessOptions): Promise<ProcessInfo[]> {
+  const cmdOpts = Object.entries(opt)
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `-${k} "${escapePowershellInput(`${v}`)}"`)
+    .join(' ')
+  if (!cmdOpts) {
+    throw new Error('No query options')
   }
 
-  protected promiseEndCallback = () => {
-    if (!this.task) return
-    this.task = null
-    this.dispatchCustomEvent('stopped', {})
+  const { output } = await runPowershellWithOutput(
+    `Get-Process -ErrorAction SilentlyContinue ${cmdOpts}` +
+      ` | Select-Object ProcessName, Id` +
+      ` | ConvertTo-Json -Compress`,
+  )
+
+  if (!output) {
+    // no result will produce empty output
+    return []
   }
 
-  constructor(public readonly pid: string) {
-    super()
-  }
+  const processes: any = JSON.parse(output)
+  // single process will not return a single item array
+  const processArray: Record<string, any>[] = Array.isArray(processes)
+    ? processes
+    : [processes]
+  return processArray.map((p) =>
+    Object.fromEntries(Object.entries(p).map(([k, v]) => [k.toLowerCase(), v])),
+  ) as any
+}
 
-  public start(beforeCheckDelay: number = 0) {
-    this.task = betterncm.utils
-      .delay(beforeCheckDelay)
-      .then(() => this.waitForStop())
-      .then(
-        () => this.promiseEndCallback(),
-        (e) => {
-          console.error(e)
-          return this.promiseEndCallback()
-        },
-      )
-  }
+export async function queryServerProcessId(): Promise<number | undefined> {
+  const processes = await queryProcess({ name: SERVER_PROCESS_NAME })
+  return processes[0]?.id
+}
 
-  public static async getStoredPID(): Promise<string | undefined> {
-    const pidFilePath = await getPIDFilePath()
-    if (await betterncm.fs.exists(pidFilePath)) {
-      return (await betterncm.fs.readFileText(pidFilePath)).trim() ?? undefined
-    }
-    return undefined
-  }
+export async function killServer(): Promise<void> {
+  await runPowershellWithOutput(`Stop-Process -Name "${SERVER_PROCESS_NAME}" -Force`)
+}
 
-  public static async killAllByName() {
-    await betterncm.app.exec(`taskkill /F /IM ${SERVER_FILENAME}`)
-    console.log('Server killed (by name)')
-  }
+export async function getServerOriginalPath(): Promise<string> {
+  const pluginPath = loadedPlugins['6k-labs'].pluginPath.replace('/./', '/')
+  return `${pluginPath}/${SERVER_FILENAME}`
+}
 
-  public static async restoreProc(): Promise<BackendSvrProc | undefined> {
-    const pid = await this.getStoredPID()
-    if (pid) {
-      const p = new BackendSvrProc(pid)
-      if (await p.checkRunning()) {
-        p.start(DETECT_DELAY)
-        return p
-      }
-    }
-    return undefined
-  }
+export async function ensureServerTempPath(): Promise<string> {
+  return `${await ensureTmpDir()}/${SERVER_FILENAME}`
+}
 
-  public static async startNewProc(): Promise<BackendSvrProc> {
-    const restored = await this.restoreProc()
-    if (restored) {
-      console.log('Server already running, skip start')
-      return restored
-    }
+export async function copyServerToTemp(): Promise<string> {
+  const originalPath = await getServerOriginalPath()
+  const tempPath = await ensureServerTempPath()
+  await runPowershellWithOutput(
+    `Copy-Item` +
+      ` -Path "${escapePowershellInput(originalPath)}"` +
+      ` -Destination "${escapePowershellInput(tempPath)}"`,
+  )
+  return tempPath
+}
 
-    // kill other servers
-    await this.killAllByName()
-
-    const pidFilePath = await getPIDFilePath()
-    const pluginPath = loadedPlugins['6k-labs'].pluginPath.replace('/./', '/')
-    const serverPath = `${pluginPath}/${SERVER_FILENAME}`
-    await betterncm.app.exec(
-      `powershell -Command "` +
-        `(Start-Process -PassThru -WindowStyle Hidden` +
-        ` -FilePath '${escapePathArg(serverPath)}').ID` +
-        ` | Out-File -Encoding utf8 -FilePath '${escapePathArg(pidFilePath)}'` +
-        `"`,
-    )
-    const pid = await waitOutFile(pidFilePath, { shouldDelete: false })
-    const proc = new BackendSvrProc(pid)
-    proc.start()
-    console.log('Server started')
-    return proc
-  }
-
-  public async checkRunning(): Promise<boolean> {
-    const tmpPath = await genTmpFilePath()
-    await betterncm.app.exec(
-      `powershell -Command ` +
-        `"` +
-        `((((Get-Process -Id ${this.pid}) 2> $null) -and $True) -or $False)` +
-        ` | Out-File -Encoding utf8 -FilePath '${escapePathArg(tmpPath)}'` +
-        `"`,
-    )
-    const res = (await waitOutFile(tmpPath)) === 'True'
-
-    if (!res) {
-      const pidFilePath = await getPIDFilePath()
-      if (await betterncm.fs.exists(pidFilePath)) {
-        await betterncm.fs.remove(pidFilePath)
-      }
-    }
-
-    return res
-  }
-
-  public async waitForStop() {
-    for (;;) {
-      if (!(await this.checkRunning())) break
-      await betterncm.utils.delay(DETECT_DELAY)
-    }
-  }
-
-  public async kill() {
-    // if (!this.task) return
-    this.task = null
-    await betterncm.app.exec(`taskkill /F /PID ${this.pid}`)
-    await this.waitForStop()
-    this.dispatchCustomEvent('stopped', {})
-    console.log('Server killed')
-  }
+export async function startServer(): Promise<number> {
+  const { output } = await runPowershellWithOutput(
+    `(Start-Process` +
+      ` -PassThru` +
+      ` -WindowStyle Hidden` +
+      ` -FilePath "${escapePowershellInput(await copyServerToTemp())}"` +
+      `).ID`,
+  )
+  return parseInt(output, 10)
 }
 
 export enum StopType {
@@ -203,46 +99,81 @@ export enum StopType {
   START_FAILED,
 }
 
+export type ProcessWatcherEventMap = {
+  stopped: CustomEvent<undefined>
+}
+
+export class ProcessWatcher extends TypedEventTarget<ProcessWatcherEventMap> {
+  protected _closed = false
+  protected _taskPromise: Promise<void>
+
+  public get closed() {
+    return this._closed
+  }
+
+  constructor(public readonly pid: number) {
+    super()
+    this._taskPromise = this.task()
+  }
+
+  protected task() {
+    const dispatchEv = () => {
+      if (this._closed) return
+      this.dispatchCustomEvent('stopped', {})
+      this._closed = true
+    }
+    return waitForFunction(
+      async () => {
+        const processes = await queryProcess({ id: this.pid })
+        return this._closed || processes.length === 0
+      },
+      {
+        delay: DETECT_DELAY,
+        times: 0,
+        ignoreException: false,
+      },
+    ).then(dispatchEv, dispatchEv)
+  }
+
+  public close() {
+    this._closed = true
+  }
+}
+
 export type BackendSvrManagerEventMap = {
+  starting: CustomEvent<undefined>
   started: CustomEvent<undefined>
   stopped: CustomEvent<StopType>
   beforeKill: CustomEvent<undefined>
 }
 
 export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMap> {
-  public proc?: BackendSvrProc
-  protected lastStartTime = 0
-
-  protected _starting = false
+  protected _processWatcher: ProcessWatcher | undefined
+  protected _lastStartTime = 0
   protected _stopped = true
   protected _stopType: StopType = StopType.MANUALLY
 
-  protected stoppedCallback = () => {
-    if (this._stopped) {
-      this._stopType = StopType.MANUALLY
-      console.log('Server stopped manually')
-    } else {
-      const now = Date.now()
-      if (now - this.lastStartTime < DEBOUNCE_TIME) {
-        this._stopped = true
-        this._stopType = StopType.ACCIDENTALLY_TOO_SOON
-        console.log('Server stopped too soon, will not restart')
-      } else {
-        this._stopType = StopType.ACCIDENTALLY
-      }
-    }
-    this.dispatchCustomEvent('stopped', { detail: this._stopType })
+  protected processStopCallback = () => {
+    if (this._stopped) return
 
-    if (this._stopType === StopType.ACCIDENTALLY) {
-      console.log(`Server accidentally stopped, will retry in ${RETRY_TIME} ms`)
-      setTimeout(() => {
-        if (!this._stopped) this.restart()
-      }, RETRY_TIME)
+    if (Date.now() - this._lastStartTime < TOO_SOON_TIME) {
+      this._stopType = StopType.ACCIDENTALLY_TOO_SOON
+      this._stopped = true
+      console.log('Server stopped too soon, will not restart')
+      this.dispatchCustomEvent('stopped', { detail: this._stopType })
+      return
     }
+
+    this._stopType = StopType.ACCIDENTALLY
+    console.log(`Server accidentally stopped, will restart after ${RETRY_TIME}ms`)
+    this.dispatchCustomEvent('stopped', { detail: this._stopType })
+    setTimeout(() => {
+      this.restart()
+    }, RETRY_TIME)
   }
 
-  public get running(): boolean {
-    return !!this.proc?.running
+  public get processRunning(): boolean {
+    return this._processWatcher !== undefined && !this._processWatcher.closed
   }
 
   public get stopped(): boolean {
@@ -253,33 +184,58 @@ export class BackendSvrManager extends TypedEventTarget<BackendSvrManagerEventMa
     return this._stopType
   }
 
+  protected async _restart() {
+    // const queriedAliveProcessId = await queryServerProcessId()
+    // if (queriedAliveProcessId === undefined) {
+    const pid = await startServer()
+    this._processWatcher = new ProcessWatcher(pid)
+    // } else {
+    //   this._processWatcher = new ProcessWatcher(queriedAliveProcessId)
+    // }
+    this._lastStartTime = Date.now()
+    this._processWatcher.addEventListener(
+      'stopped',
+      this.processStopCallback.bind(this),
+    )
+  }
+
   public async restart() {
-    if (this._starting) return
-    this._starting = true
-    await this.kill()
-    this._stopped = false
-    this._stopType = StopType.MANUALLY
-    this.lastStartTime = Date.now()
+    this.dispatchCustomEvent('starting', {})
     try {
-      this.proc = await BackendSvrProc.startNewProc()
+      await this.kill()
+      this._stopped = false
+      await this._restart()
     } catch (e) {
-      this._starting = false
-      console.error(e)
-      this.kill()
+      this._stopped = true
       this._stopType = StopType.START_FAILED
+      console.error('Server start failed')
+      console.error(e)
       this.dispatchCustomEvent('stopped', { detail: this._stopType })
-      return
     }
-    this.proc.addEventListener('stopped', this.stoppedCallback)
-    this._starting = false
     this.dispatchCustomEvent('started', {})
   }
 
-  public async kill() {
+  public async kill(stopType: StopType = StopType.MANUALLY) {
+    const originalStopped = this._stopped
     this._stopped = true
-    this.dispatchCustomEvent('beforeKill', {})
-    if (this.proc) await this.proc.kill()
-    this.proc = undefined
+    this._stopType = stopType
+
+    if (!originalStopped) {
+      this.dispatchCustomEvent('beforeKill', {})
+    }
+
+    if (this._processWatcher) {
+      this._processWatcher.close()
+      this._processWatcher = undefined
+      console.log('ProcessWatcher closed')
+    }
+
+    await killServer()
+    console.log('Server killed')
+
+    if (!originalStopped) {
+      this.dispatchCustomEvent('stopped', { detail: this._stopType })
+    }
   }
 }
 
