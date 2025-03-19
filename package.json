@@ -6,7 +6,7 @@
   "description": "",
   "main": "index.js",
   "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
-  "author": "student_2333 <lgc2333@126.com>",
+  "author": "LgCookie <lgc2333@126.com>",
   "license": "MIT",
   "scripts": {
     "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
