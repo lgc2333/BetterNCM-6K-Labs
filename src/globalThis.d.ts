@@ -1,6 +1,6 @@
-/* eslint-disable no-var */
+/* eslint-disable no-var, vars-on-top */
 
-declare module globalThis {
+declare namespace globalThis {
   interface SixKLabsDev {
     utils: typeof utils
   }

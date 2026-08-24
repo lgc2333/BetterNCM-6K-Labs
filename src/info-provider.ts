@@ -41,7 +41,7 @@ export interface Query {
 }
 
 export interface Provider {
-  query(): Query
+  query: () => Query
 }
 
 export interface Album {
@@ -127,17 +127,18 @@ export class DOMProvider implements Provider {
 
     const isPaused = playing.state === 1
 
-    const volumePercent = parseFloat(
+    const volumePercent = Number.parseFloat(
       currentPlayerElem
         .querySelector<HTMLDivElement>('.prg-spk .has.j-flag')!
         .style.height.replace(/%$/, ''),
     )
 
     const seekbarCurrentPositionHuman =
+      // eslint-disable-next-line unicorn/prefer-dom-node-text-content
       currentPlayerElem.querySelector<HTMLTimeElement>('time.now')!.innerText
     const seekbarCurrentPosition = parseTimeStr(seekbarCurrentPositionHuman)
     const statePercent =
-      parseFloat(
+      Number.parseFloat(
         currentPlayerElem
           .querySelector<HTMLDivElement>('.prg-ply .has')!
           .style.width.replace(/%$/, ''),
@@ -175,6 +176,7 @@ export class DOMProvider implements Provider {
     const cover = playing.data.album.picUrl
 
     const durationHuman =
+      // eslint-disable-next-line unicorn/prefer-dom-node-text-content
       currentPlayerElem.querySelector<HTMLTimeElement>('time.all')!.innerText
     const duration = parseTimeStr(durationHuman)
 

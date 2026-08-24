@@ -16,7 +16,7 @@ plugin.onConfig(() => {
   return element
 })
 
-plugin.onLoad(async (selfPlugin) => {
+plugin.onLoad(async (_selfPlugin) => {
   await utils.removeCmdTmpDir().catch(console.error)
 
   backendSvrManager.addEventListener('started', () => {

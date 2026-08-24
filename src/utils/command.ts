@@ -1,8 +1,9 @@
+import type {
+  WaitForFunctionOptions} from './common';
 import {
   ensureTmpDir,
   randomChars,
-  waitForFunction,
-  WaitForFunctionOptions,
+  waitForFunction
 } from './common'
 
 export interface CommandResult {

@@ -1,13 +1,13 @@
 {
   "name": "better-ncm-6k-labs",
-  "packageManager": "pnpm@11.23.0+sha512.f00082e5b283a199b74e079da28d155c008fe232f44c8a06ea7ddfa014ecf719fc362f790ecc67b28106ddac2afb24c49a9a079159da560b2ce7d1e98efd11af",
-  "private": true,
   "version": "0",
+  "private": true,
+  "packageManager": "pnpm@11.23.0+sha512.f00082e5b283a199b74e079da28d155c008fe232f44c8a06ea7ddfa014ecf719fc362f790ecc67b28106ddac2afb24c49a9a079159da560b2ce7d1e98efd11af",
   "description": "",
-  "main": "index.js",
-  "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
   "author": "LgCuwukii <lgc2333@126.com>",
   "license": "MIT",
+  "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
+  "main": "index.js",
   "scripts": {
     "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
     "build:js": "esbuild ./src/main.ts --bundle --minify --outdir=dist --target=chrome91",

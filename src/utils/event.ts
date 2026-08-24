@@ -3,7 +3,7 @@ export interface EventListenerFunc<TE extends Event = Event> {
 }
 
 export interface EventListenerObject<TE extends Event = Event> {
-  handleEvent(object: TE): void
+  handleEvent: (object: TE) => void
 }
 
 export type EventListener<TE extends Event = Event> =

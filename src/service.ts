@@ -26,6 +26,7 @@ export type WSCustomEvent<T> = CustomEvent<{
   data: T
   answer: (data: any) => void
 }>
+// eslint-disable-next-line ts/consistent-type-definitions
 export type ConnectionEventMap = {
   open: CustomEvent<undefined>
   close: CustomEvent<undefined>
@@ -76,7 +77,7 @@ export class WebsocketService extends TypedEventTarget<MessageEventMapType> {
     let data: any
     try {
       data = JSON.parse(ev.data)
-    } catch (e) {
+    } catch {
       console.error('Failed to parse message', ev.data)
       return
     }

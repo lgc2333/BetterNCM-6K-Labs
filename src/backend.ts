@@ -99,6 +99,7 @@ export enum StopType {
   START_FAILED,
 }
 
+// eslint-disable-next-line ts/consistent-type-definitions
 export type ProcessWatcherEventMap = {
   stopped: CustomEvent<undefined>
 }
@@ -140,6 +141,7 @@ export class ProcessWatcher extends TypedEventTarget<ProcessWatcherEventMap> {
   }
 }
 
+// eslint-disable-next-line ts/consistent-type-definitions
 export type BackendSvrManagerEventMap = {
   starting: CustomEvent<undefined>
   started: CustomEvent<undefined>
