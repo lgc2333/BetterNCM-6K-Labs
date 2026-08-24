@@ -1,27 +1,27 @@
 {
   "name": "better-ncm-6k-labs",
-  "packageManager": "yarn@4.5.3",
+  "packageManager": "pnpm@11.23.0+sha512.f00082e5b283a199b74e079da28d155c008fe232f44c8a06ea7ddfa014ecf719fc362f790ecc67b28106ddac2afb24c49a9a079159da560b2ce7d1e98efd11af",
   "private": true,
   "version": "0",
   "description": "",
   "main": "index.js",
   "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
-  "author": "LgCookie <lgc2333@126.com>",
+  "author": "LgCuwukii <lgc2333@126.com>",
   "license": "MIT",
   "scripts": {
     "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
     "build:js": "esbuild ./src/main.ts --bundle --minify --outdir=dist --target=chrome91",
     "build:server": "go build -C ./backend-server -o ../dist/bncm-6k-labs-server.exe",
-    "build:dev": "yarn build:js:dev && yarn build:server && tsx ../../scripts/post-build.ts",
-    "build": "yarn build:js && yarn build:server && tsx ../../scripts/post-build.ts",
+    "build:dev": "pnpm run build:js:dev && pnpm run build:server && tsx ../../scripts/post-build.ts",
+    "build": "pnpm run build:js && pnpm run build:server && tsx ../../scripts/post-build.ts",
     "apply": "tsx ../../scripts/apply.ts",
     "analyze": "esbuild --bundle ./src/main.ts --outdir=dist --minify --analyze=verbose"
   },
   "devDependencies": {
-    "@types/node": "^22.10.1",
-    "@types/react": "^16.14.0",
-    "@types/react-dom": "^16.9.24",
-    "esbuild": "^0.24.0",
-    "tsx": "^4.19.2"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "esbuild": "catalog:",
+    "tsx": "catalog:"
   }
 }
