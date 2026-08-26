@@ -20,3 +20,7 @@ export function tryParseUrl(value: string): URL | undefined {
     return undefined
   }
 }
+
+export function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : `${error}`
+}

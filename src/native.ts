@@ -1,17 +1,29 @@
 import type { NativeDispatchMessage } from './types'
-import { TypedEventTarget } from './utils'
+import { errorMessage, TypedEventTarget } from './utils'
+
+export interface SixKLabsNativePlugin {
+  call: (identifier: string, args: unknown[]) => string
+  getRegisteredAPIs: () => string[]
+}
 
 declare global {
   interface BetterNCMNative {
-    native_plugin: {
-      call: (identifier: string, args: unknown[]) => string
-      getRegisteredAPIs: () => string[]
-    }
+    native_plugin: SixKLabsNativePlugin
   }
 }
 
 export const SERVER_PORT = 9863
 export const QUERY_URL = `http://127.0.0.1:${SERVER_PORT}/query`
+
+export const NATIVE_API_IDS = [
+  'initialize',
+  'terminate',
+  'restart',
+  'getServerStatus',
+  'registerServerStatusCallback',
+  'dispatch',
+] as const
+export type NativeAPIIds = (typeof NATIVE_API_IDS)[number]
 
 export interface NativeResult<T = unknown> {
   ok: boolean
@@ -69,7 +81,7 @@ export class NativeBridge extends TypedEventTarget<NativeBridgeEventMap> {
   }
 
   private callStatusApi(
-    identifier: 'initialize' | 'terminate' | 'restart' | 'getServerStatus',
+    identifier: NativeAPIIds,
     args: unknown[],
   ): NativeResult<ServerStatus> {
     const result = this.callNative<ServerStatus>(identifier, args)
@@ -91,7 +103,8 @@ export class NativeBridge extends TypedEventTarget<NativeBridgeEventMap> {
       const raw = betterncm_native.native_plugin.call(identifier, args)
       return parseNativeResult<T>(raw)
     } catch (error) {
-      return { ok: false, error: errorMessage(error) }
+      console.error(`[6k-Labs] native call failed: ${identifier}`, error)
+      return { ok: false, error: describeCallFailure(identifier, error) }
     }
   }
 
@@ -129,6 +142,27 @@ function parseNativeResult<T>(raw: string): NativeResult<T> {
   return value
 }
 
-function errorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : `${error}`
+function describeCallFailure(identifier: string, error: unknown): string {
+  let registered: string[] | undefined
+  try {
+    registered = betterncm_native.native_plugin.getRegisteredAPIs()
+  } catch {
+    registered = undefined
+  }
+  if (registered === undefined) {
+    return '当前 BetterNCM 不支持原生插件调用'
+  }
+
+  const oursRegistered = NATIVE_API_IDS.filter((id) => registered.includes(id))
+  if (oursRegistered.length === 0) {
+    return '插件原生模块加载失败'
+  }
+  if (oursRegistered.length < NATIVE_API_IDS.length) {
+    console.error(
+      `[6k-Labs] native module registered APIs: ${oursRegistered.join(', ')}`,
+    )
+    return '插件原生模块加载不完整，请尝试卸载重装本插件'
+  }
+
+  return errorMessage(error)
 }
