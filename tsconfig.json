@@ -1,7 +1,4 @@
 {
-  "extends": "../../tsconfig.base",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "include": ["src", "../../types/src/**/*.d.ts"]
+  "references": [{ "path": "tsconfig.project.json" }, { "path": "./scripts" }],
+  "files": []
 }
