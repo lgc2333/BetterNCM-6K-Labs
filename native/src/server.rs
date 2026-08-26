@@ -1,6 +1,8 @@
-use std::net::Ipv4Addr;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::net::{Ipv4Addr, SocketAddr, TcpListener};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
 
@@ -21,8 +23,10 @@ pub struct ServerHandle {
 
 impl ServerHandle {
     pub fn start(cache: Arc<Cache>, status: StatusStore) -> Result<Self, String> {
-        let server = Server::http((Ipv4Addr::LOCALHOST, SERVER_PORT))
-            .map_err(|error| format!("failed to bind 127.0.0.1:{SERVER_PORT}: {error}"))?;
+        let listener = create_exclusive_listener()?;
+        let server = Server::from_listener(listener, None).map_err(|error| {
+            format!("failed to start HTTP server on 127.0.0.1:{SERVER_PORT}: {error}")
+        })?;
         let server = Arc::new(server);
 
         let running = Arc::new(AtomicBool::new(true));
@@ -74,5 +78,78 @@ fn serve_loop(
                 return;
             }
         }
+    }
+}
+
+fn create_exclusive_listener() -> Result<TcpListener, String> {
+    bind_exclusive(SocketAddr::from((Ipv4Addr::LOCALHOST, SERVER_PORT)))
+}
+
+fn bind_exclusive(addr: SocketAddr) -> Result<TcpListener, String> {
+    let socket = socket2::Socket::new(
+        socket2::Domain::for_address(addr),
+        socket2::Type::STREAM,
+        Some(socket2::Protocol::TCP),
+    )
+    .map_err(|error| format!("failed to create TCP socket: {error}"))?;
+
+    // Rust's std TcpListener sets SO_REUSEADDR on Windows, which silently allows a
+    // second process to double-bind the same port. Bind without it and mark our
+    // socket exclusive so port conflicts surface as loud startup failures instead
+    // of nondeterministic connection stealing.
+    #[cfg(windows)]
+    set_exclusive_addr_use(&socket)?;
+
+    socket
+        .bind(&addr.into())
+        .map_err(|error| format!("端口 {addr} 可能被其他程序占用: {error}"))?;
+    socket
+        .listen(128)
+        .map_err(|error| format!("failed to listen on {addr}: {error}"))?;
+
+    Ok(TcpListener::from(socket))
+}
+
+#[cfg(windows)]
+fn set_exclusive_addr_use(socket: &socket2::Socket) -> Result<(), String> {
+    use std::os::windows::io::AsRawSocket;
+
+    use windows_sys::Win32::Networking::WinSock::{
+        setsockopt, WSAGetLastError, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+    };
+
+    let exclusive: i32 = 1;
+    let result = unsafe {
+        setsockopt(
+            socket.as_raw_socket() as usize,
+            SOL_SOCKET,
+            SO_EXCLUSIVEADDRUSE,
+            (&exclusive as *const i32).cast(),
+            size_of::<i32>() as i32,
+        )
+    };
+    if result != 0 {
+        let wsa_error = unsafe { WSAGetLastError() };
+        return Err(format!(
+            "failed to set SO_EXCLUSIVEADDRUSE: WSA error {wsa_error}"
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_second_bind_on_active_port() {
+        let first = bind_exclusive("127.0.0.1:0".parse().unwrap())
+            .expect("first exclusive bind should succeed");
+        let port = first.local_addr().unwrap().port();
+
+        let second = bind_exclusive(SocketAddr::from(([127, 0, 0, 1], port)));
+
+        assert!(second.is_err(), "second bind on active port must fail");
+        assert!(second.unwrap_err().contains("可能被其他程序占用"));
     }
 }
