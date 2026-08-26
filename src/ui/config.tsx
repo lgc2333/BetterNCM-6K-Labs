@@ -90,28 +90,26 @@ export function Config() {
       <StatusRow
         label="本地 HTTP 服务"
         value={serverStatusLabel(serverStatus)}
-        ok={serverStatus.state === 'up'}
-        detail={serverStatus.detail ?? nativeError}
+        tone={serverStatusTone(serverStatus)}
+        detail={
+          serverStatus.state === 'up' ? undefined : (serverStatus.detail ?? nativeError)
+        }
       />
       <StatusRow
         label="InfLink-rs"
-        value={
-          sourceDiagnostics.infLinkAvailable
-            ? `已连接 ${sourceDiagnostics.infLinkVersion ?? ''}`.trim()
-            : '等待中'
-        }
-        ok={sourceDiagnostics.infLinkAvailable}
+        value={infLinkLabel(sourceDiagnostics)}
+        tone={infLinkTone(sourceDiagnostics)}
       />
       <StatusRow
         label="JS 推送适配器"
         value={sourceStateLabel(sourceDiagnostics.state)}
-        ok={sourceDiagnostics.state === 'running'}
+        tone={sourceStateTone(sourceDiagnostics.state)}
         detail={sourceDiagnostics.lastError ?? sourceDiagnostics.lastCoverError}
       />
       <StatusRow
         label="最近心跳"
         value={formatTimestamp(sourceDiagnostics.lastHeartbeatAt)}
-        ok={Boolean(sourceDiagnostics.lastHeartbeatAt)}
+        tone={sourceDiagnostics.lastHeartbeatAt ? 'ok' : 'neutral'}
       />
       <div style={rowStyle}>
         <div>查询地址</div>
@@ -185,13 +183,24 @@ export function Config() {
           使用
         </p>
         <p>
-          登录后进入后台面板，点击 Widgets，再点击 Amuse，之后选择 Youtube Music，复制
-          URL 后向 OBS 添加浏览器源即可，也可以直接在浏览器中打开预览效果。
+          登录后进入后台面板，点击 Widgets，再点击 Amuse，之后选择 Pear Desktop (YouTube
+          Music)，复制 URL 后向 OBS 添加浏览器源即可，也可以直接在浏览器中打开预览效果。
         </p>
       </div>
 
       <h1 style={{ fontSize: '20px' }}>鸣谢</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <p>
+          - 灵感来源：{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() =>
+              betterncm.ncm.openUrl('https://github.com/Widdit/now-playing-service')
+            }
+          >
+            Widdit/now-playing-service
+          </a>
+        </p>
         <p>
           - 数据来源：{' '}
           <a
@@ -210,6 +219,28 @@ export function Config() {
             onClick={() => betterncm.ncm.openUrl('https://6klabs.com')}
           >
             6K Labs
+          </a>
+        </p>
+        <p>
+          - 旧版本技术参考：{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() =>
+              betterncm.ncm.openUrl('https://github.com/BetterNCM/InfinityLink')
+            }
+          >
+            BetterNCM/InfinityLink
+          </a>{' '}
+          &{' '}
+          <a
+            style={{ textDecoration: '1px solid underline' }}
+            onClick={() =>
+              betterncm.ncm.openUrl(
+                'https://github.com/std-microblock/LiveSongPlayer-MKII',
+              )
+            }
+          >
+            std-microblock/LiveSongPlayer-MKII
           </a>
         </p>
       </div>
@@ -231,17 +262,20 @@ export function ConfigWrapper() {
   return <Config />
 }
 
+type StatusTone = 'ok' | 'error' | 'neutral'
+
 function StatusRow(props: {
   label: string
   value: string
-  ok: boolean
+  tone: StatusTone
   detail?: string
 }) {
+  const color = props.tone === 'ok' ? 'green' : props.tone === 'error' ? 'red' : 'gray'
   return (
     <div style={rowStyle}>
       <div>{props.label}</div>
       <div style={{ textAlign: 'right' }}>
-        <span style={{ color: props.ok ? 'green' : 'red' }}>{props.value}</span>
+        <span style={{ color }}>{props.value}</span>
         {props.detail ? (
           <>
             <br />
@@ -284,6 +318,29 @@ function sourceStateLabel(state: SourceAdapterState): string {
     stopped: '已停止',
     failed: '推送失败',
   }[state]
+}
+
+function serverStatusTone(status: ServerStatus): StatusTone {
+  if (status.state === 'up') return 'ok'
+  return status.reason === 'failed' ? 'error' : 'neutral'
+}
+
+function infLinkLabel(diagnostics: SourceDiagnostics): string {
+  if (diagnostics.state === 'stopped') return '已断开'
+  if (diagnostics.infLinkAvailable) {
+    return `已连接 ${diagnostics.infLinkVersion ?? ''}`.trim()
+  }
+  return '等待中'
+}
+
+function infLinkTone(diagnostics: SourceDiagnostics): StatusTone {
+  if (diagnostics.state === 'failed') return 'error'
+  return diagnostics.infLinkAvailable ? 'ok' : 'neutral'
+}
+
+function sourceStateTone(state: SourceAdapterState): StatusTone {
+  if (state === 'running') return 'ok'
+  return state === 'failed' ? 'error' : 'neutral'
 }
 
 function formatTimestamp(timestamp: number | undefined): string {
