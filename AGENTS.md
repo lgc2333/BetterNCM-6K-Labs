@@ -22,8 +22,7 @@ Note: This package is intended to work within the `lgc2333/BetterNCM-Workspace` 
 
 - `pnpm run build`: build minified plugin JS, build the Rust native DLL, then copy metadata/assets.
 - `pnpm run build:dev`: build JS with inline sourcemaps, build the Rust native DLL, then copy metadata/assets.
-- `pnpm run build:js`: bundle only `src/main.ts`.
-- `pnpm run build:native`: compile `native/`, then copy metadata/assets and the DLL via `scripts/post-build.ts`.
+- `pnpm run build:native`: compile `native/` for i686 + x86_64 MSVC via `scripts/build-native.ts`, then copy metadata/assets via `scripts/post-build.ts`. Output DLLs follow BetterNCM naming: `6k-labs-native.dll` (ia32) and `6k-labs-native.dll.x64.dll` (x64 fallback).
 - `pnpm run check`: run TypeScript checks and Rust tests/clippy.
 - `cargo test --manifest-path native/Cargo.toml`: run native cache/mapping tests.
 - `pnpm run analyze`: inspect the bundled JS output.

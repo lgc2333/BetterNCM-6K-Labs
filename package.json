@@ -11,7 +11,7 @@
   "scripts": {
     "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
     "build:js": "esbuild ./src/main.ts --bundle --minify --outdir=dist --target=chrome91",
-    "build:native": "cargo build --manifest-path ./native/Cargo.toml --release --target x86_64-pc-windows-msvc --target-dir ./native/target && tsx ../../scripts/post-build.ts ./native/target/x86_64-pc-windows-msvc/release/better_ncm_6k_labs_native.dll ./dist/6k-labs-native.dll",
+    "build:native": "tsx ./scripts/build-native.ts && tsx ../../scripts/post-build.ts",
     "build:dev": "pnpm run build:js:dev && pnpm run build:native",
     "build": "pnpm run build:js && pnpm run build:native",
     "apply": "tsx ../../scripts/apply.ts",
