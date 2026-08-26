@@ -7,8 +7,7 @@ export interface EventListenerObject<TE extends Event = Event> {
 }
 
 export type EventListener<TE extends Event = Event> =
-  | EventListenerFunc<TE>
-  | EventListenerObject<TE>
+  EventListenerFunc<TE> | EventListenerObject<TE>
 
 export class TypedEventTarget<E extends { [key: string]: Event }> extends EventTarget {
   public override addEventListener<K extends keyof E>(

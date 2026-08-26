@@ -2,25 +2,32 @@
 
 ## Project Structure
 
-- `src/main.ts`: plugin entry bundled by esbuild.
-- `src/backend.ts`, `src/service.ts`, `src/info-provider.ts`: plugin runtime/service code.
-- `src/ui/`: TSX UI, including the config panel.
-- `src/utils/`: shared package utilities.
-- `backend-server/`: Go backend built into `dist/bncm-6k-labs-server.exe`.
-- `manifest.json`: plugin metadata copied into `dist/` after builds.
-- `preview.png`: plugin preview copied into `dist/` when present.
-- `dist/`: generated build output; do not edit by hand.
+- `src`
+  - `main.ts`: plugin entry bundled by esbuild.
+  - `native.ts`: BetterNCM native call adapter.
+  - `source-adapter.ts`: InfLink-rs subscription and native dispatch adapter.
+  - `cover.ts`, `settings.ts`, `inflink-api.ts`: cover contract, plugin config, and InfLink-rs public types.
+  - `ui/`: TSX UI, including the config panel.
+  - `utils/`: shared package utilities.
+- `native/`: Rust `cdylib` crate `better_ncm_6k_labs_native`.
+- `dist/`: generated build output.
+- `docs/`
+  - `adr/`: accepted architecture decisions for this package.
+  - `archived/`: archived handoffs and research notes; ADRs win on conflicts.
+- `manifest.json`, `preview.png`: plugin metadata and preview copied into `dist/` after builds.
 
 ## Commands
 
-- `pnpm run build`: build minified plugin JS, build the Go backend, then copy metadata/assets.
-- `pnpm run build:dev`: build JS with inline sourcemaps, build the Go backend, then copy metadata/assets.
+- `pnpm run build`: build minified plugin JS, build the Rust native DLL, then copy metadata/assets.
+- `pnpm run build:dev`: build JS with inline sourcemaps, build the Rust native DLL, then copy metadata/assets.
 - `pnpm run build:js`: bundle only `src/main.ts`.
-- `pnpm run build:server`: compile `backend-server/` into `dist/bncm-6k-labs-server.exe`.
-- `pnpm run check`: run TypeScript project checks.
+- `pnpm run build:native`: compile `native/` into `dist/6k-labs-native.dll`.
+- `pnpm run check`: run TypeScript checks and Rust tests/clippy.
+- `cargo test --manifest-path native/Cargo.toml`: run native cache/mapping tests.
 - `pnpm run analyze`: inspect the bundled JS output.
 - `pnpm run apply`: copy `dist/` into the BetterNCM dev plugin directory.
 
 ## Rules
 
-To be added
+- ADRs in `docs/adr/` are the source of truth; archived docs are historical.
+- Keep JavaScript as a push adapter only; Rust owns cache freshness, HTTP, and query mapping.

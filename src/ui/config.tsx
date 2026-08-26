@@ -1,130 +1,175 @@
-import { backendSvrManager, StopType, TOO_SOON_TIME } from '../backend'
-import { SERVER_PORT, websocketService } from '../service'
+import type { CSSProperties, ReactNode } from 'react'
+
+import type { ServerStatus } from '../native'
+import type { CoverMode } from '../settings'
+import type { SourceAdapterState, SourceDiagnostics } from '../source-adapter'
+import { nativeBridge, QUERY_URL } from '../native'
+import { sixKLabsRuntime } from '../runtime'
+import {
+  COVER_QUALITY_PRESETS,
+  readCoverSettings,
+  writeCoverSettings,
+} from '../settings'
+import { sourceAdapter } from '../source-adapter'
+
+const rowStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '16px',
+  padding: '6px 0',
+  borderBottom: '1px solid rgba(136, 136, 136, 0.333)',
+} satisfies CSSProperties
+
+const buttonStyle = {
+  display: 'flex',
+  alignItems: 'center',
+  background: 'transparent',
+} satisfies CSSProperties
 
 export function Config() {
-  const [serviceConnected, setServiceConnecting] = React.useState(
-    websocketService.connected,
+  const [serverStatus, setServerStatus] = React.useState(nativeBridge.status)
+  const [nativeError, setNativeError] = React.useState(nativeBridge.lastError)
+  const [sourceDiagnostics, setSourceDiagnostics] = React.useState(
+    sourceAdapter.diagnostics,
   )
-  const [serviceStopped, setServiceStopped] = React.useState(websocketService.stopped)
-  const [backendRunning, setServerRunning] = React.useState(
-    backendSvrManager.processRunning,
-  )
-  const [backendStopped, setServerStopped] = React.useState(backendSvrManager.stopped)
-  const [backendStopType, setServerStopType] = React.useState(
-    backendSvrManager.stopType,
-  )
-
-  const handleServiceStateChange = React.useCallback(() => {
-    setServiceConnecting(websocketService.connected)
-    setServiceStopped(websocketService.stopped)
-  }, [])
-
-  const handleBackendStateChange = React.useCallback(() => {
-    setServerRunning(backendSvrManager.processRunning)
-    setServerStopped(backendSvrManager.stopped)
-    setServerStopType(backendSvrManager.stopType)
-  }, [])
+  const [coverSettings, setCoverSettings] = React.useState(readCoverSettings)
+  const [qualityInput, setQualityInput] = React.useState(coverSettings.coverQuality)
 
   React.useEffect(() => {
-    websocketService.addEventListener('open', handleServiceStateChange)
-    websocketService.addEventListener('close', handleServiceStateChange)
-    backendSvrManager.addEventListener('starting', handleBackendStateChange)
-    backendSvrManager.addEventListener('started', handleBackendStateChange)
-    backendSvrManager.addEventListener('beforeKill', handleBackendStateChange)
-    backendSvrManager.addEventListener('stopped', handleBackendStateChange)
+    const handleNativeChange = () => {
+      setServerStatus(nativeBridge.status)
+      setNativeError(nativeBridge.lastError)
+    }
+    const handleSourceChange = (ev: CustomEvent<SourceDiagnostics>) => {
+      setSourceDiagnostics(ev.detail)
+    }
+
+    nativeBridge.addEventListener('change', handleNativeChange)
+    sourceAdapter.addEventListener('change', handleSourceChange)
+    nativeBridge.getServerStatus()
 
     return () => {
-      websocketService.removeEventListener('open', handleServiceStateChange)
-      websocketService.removeEventListener('close', handleServiceStateChange)
-      backendSvrManager.removeEventListener('starting', handleBackendStateChange)
-      backendSvrManager.removeEventListener('started', handleBackendStateChange)
-      backendSvrManager.removeEventListener('beforeKill', handleBackendStateChange)
-      backendSvrManager.removeEventListener('stopped', handleBackendStateChange)
+      nativeBridge.removeEventListener('change', handleNativeChange)
+      sourceAdapter.removeEventListener('change', handleSourceChange)
     }
-  }, [handleServiceStateChange, handleBackendStateChange])
+  }, [])
 
-  const stopTypeTipMap = {
-    [StopType.MANUALLY]: '程序未启动',
-    [StopType.ACCIDENTALLY]: '程序意外退出',
-    [StopType.ACCIDENTALLY_TOO_SOON]: `程序在过短时间内意外退出 (${TOO_SOON_TIME}ms)`,
-    [StopType.START_FAILED]: '启动失败',
+  const applyCoverMode = (coverMode: CoverMode) => {
+    const next = writeCoverSettings({ coverMode })
+    setCoverSettings(next)
+    setQualityInput(next.coverQuality)
+    sourceAdapter.refreshCover()
   }
+
+  const applyCoverQuality = (coverQuality: string) => {
+    const next = writeCoverSettings({ coverQuality })
+    setCoverSettings(next)
+    setQualityInput(next.coverQuality)
+    sourceAdapter.refreshCover()
+  }
+
+  const presetValue = COVER_QUALITY_PRESETS.includes(
+    coverSettings.coverQuality as (typeof COVER_QUALITY_PRESETS)[number],
+  )
+    ? coverSettings.coverQuality
+    : ''
 
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '8px',
+        gap: '10px',
         boxSizing: 'border-box',
         width: '100%',
       }}
     >
       <h1 style={{ fontSize: '20px' }}>服务状态</h1>
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '4px 0',
-          borderBottom: '1px solid rgba(136, 136, 136, 0.333)',
-        }}
-      >
-        <div>后端接口服务</div>
-        <div style={{ textAlign: 'right' }}>
-          <span style={{ color: backendRunning ? 'green' : 'red' }}>
-            {backendRunning
-              ? '运行中'
-              : backendStopped
-                ? backendStopType === StopType.MANUALLY
-                  ? '未运行'
-                  : '启动失败'
-                : '尝试重启中'}
-          </span>
-          {backendStopped && backendStopType !== StopType.MANUALLY ? (
-            <>
-              <br />
-              <span style={{ color: 'red' }}>
-                {stopTypeTipMap[backendStopType]}，请检查是否 {SERVER_PORT}{' '}
-                端口被占用或出现其他问题
-              </span>
-            </>
-          ) : null}
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '4px 0',
-        }}
-      >
-        <div>前端信息查询服务</div>
-        <div>
-          <span style={{ color: serviceConnected ? 'green' : 'red' }}>
-            {serviceConnected ? '已连接' : serviceStopped ? '已停止' : '重连中'}
-          </span>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', gap: '4px' }}>
+      <StatusRow
+        label="本地 HTTP 服务"
+        value={serverStatusLabel(serverStatus)}
+        ok={serverStatus.state === 'up'}
+        detail={serverStatus.detail ?? nativeError}
+      />
+      <StatusRow
+        label="InfLink-rs"
+        value={
+          sourceDiagnostics.infLinkAvailable
+            ? `已连接 ${sourceDiagnostics.infLinkVersion ?? ''}`.trim()
+            : '等待中'
+        }
+        ok={sourceDiagnostics.infLinkAvailable}
+      />
+      <StatusRow
+        label="JS 推送适配器"
+        value={sourceStateLabel(sourceDiagnostics.state)}
+        ok={sourceDiagnostics.state === 'running'}
+        detail={sourceDiagnostics.lastError ?? sourceDiagnostics.lastCoverError}
+      />
+      <StatusRow
+        label="最近心跳"
+        value={formatTimestamp(sourceDiagnostics.lastHeartbeatAt)}
+        ok={Boolean(sourceDiagnostics.lastHeartbeatAt)}
+      />
+      <div style={rowStyle}>
+        <div>查询地址</div>
         <a
-          className="false u-ibtn5 u-ibtnsz8 cmd-button cmd-button-outlineSec cmd-button-size-m cmd-button-outline-sec button-item"
-          style={{ display: 'flex', alignItems: 'center', background: 'transparent' }}
-          onClick={() => backendSvrManager.restart()}
+          style={{ textDecoration: '1px solid underline', textAlign: 'right' }}
+          onClick={() => betterncm.ncm.openUrl(QUERY_URL)}
         >
+          {QUERY_URL}
+        </a>
+      </div>
+
+      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+        <CommandButton onClick={() => sixKLabsRuntime.restart()}>
           重启服务
-        </a>
-        <a
-          className="false u-ibtn5 u-ibtnsz8 cmd-button cmd-button-outlineSec cmd-button-size-m cmd-button-outline-sec button-item"
-          style={{ display: 'flex', alignItems: 'center', background: 'transparent' }}
-          onClick={() => backendSvrManager.kill()}
+        </CommandButton>
+        <CommandButton onClick={() => sixKLabsRuntime.stop()}>停止服务</CommandButton>
+        <CommandButton onClick={() => sourceAdapter.refresh()}>刷新状态</CommandButton>
+      </div>
+
+      <h1 style={{ fontSize: '20px' }}>封面</h1>
+      <div style={rowStyle}>
+        <label>输出模式</label>
+        <select
+          className="u-txt sc-flag"
+          value={coverSettings.coverMode}
+          onChange={(ev) => applyCoverMode(ev.currentTarget.value as CoverMode)}
         >
-          停止服务
-        </a>
+          <option value="url">URL</option>
+          <option value="base64url">Base64 Data URL</option>
+        </select>
+      </div>
+      <div style={rowStyle}>
+        <label>尺寸</label>
+        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+          <select
+            className="u-txt sc-flag"
+            value={presetValue}
+            onChange={(ev) => {
+              if (ev.currentTarget.value) {
+                applyCoverQuality(ev.currentTarget.value)
+              }
+            }}
+          >
+            <option value="">自定义</option>
+            {COVER_QUALITY_PRESETS.map((quality) => (
+              <option key={quality} value={quality}>
+                {quality}
+              </option>
+            ))}
+          </select>
+          <input
+            className="u-txt sc-flag"
+            style={{ width: '84px' }}
+            value={qualityInput}
+            onChange={(ev) => setQualityInput(ev.currentTarget.value)}
+            onBlur={() => applyCoverQuality(qualityInput)}
+          />
+        </div>
       </div>
 
       <h1 style={{ fontSize: '20px' }}>使用方式</h1>
@@ -141,35 +186,21 @@ export function Config() {
         </p>
         <p>
           登录后进入后台面板，点击 Widgets，再点击 Amuse，之后选择 Youtube Music，复制
-          URL 后向 OBS 添加浏览器源即可，你也可以直接在浏览器中打开预览效果
+          URL 后向 OBS 添加浏览器源即可，也可以直接在浏览器中打开预览效果。
         </p>
-        <p>下方 Widget Settings 中还可以修改 Amuse 的样式</p>
-      </div>
-
-      <h1 style={{ fontSize: '20px' }}>碎碎念</h1>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <p>一些注意事项：</p>
-        <p>
-          - 由于 BetterNCM API 限制，后端服务无法随网易云关闭，
-          如果不停止会一直留在后台，不过资源占用不高，不介意可以不用管它
-        </p>
-        <p>
-          - 因为本废物写的状态管理代码太烂，上面两个重启和停止的按钮最好不要点太快 QAQ
-        </p>
-        <p>- 后端服务器全部代码都是交给 GitHub Copilot 写的，我不会写 Golang 啊 xwx</p>
       </div>
 
       <h1 style={{ fontSize: '20px' }}>鸣谢</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
         <p>
-          - 灵感来源：{' '}
+          - 数据来源：{' '}
           <a
             style={{ textDecoration: '1px solid underline' }}
             onClick={() =>
-              betterncm.ncm.openUrl('https://github.com/Widdit/now-playing-service')
+              betterncm.ncm.openUrl('https://github.com/apoint123/inflink-rs')
             }
           >
-            Widdit/now-playing-service
+            InfLink-rs
           </a>
         </p>
         <p>
@@ -181,44 +212,16 @@ export function Config() {
             6K Labs
           </a>
         </p>
-        <p>
-          - 技术参考：{' '}
-          <a
-            style={{ textDecoration: '1px solid underline' }}
-            onClick={() =>
-              betterncm.ncm.openUrl('https://github.com/BetterNCM/InfinityLink')
-            }
-          >
-            BetterNCM/InfinityLink
-          </a>{' '}
-          &{' '}
-          <a
-            style={{ textDecoration: '1px solid underline' }}
-            onClick={() =>
-              betterncm.ncm.openUrl(
-                'https://github.com/std-microblock/LiveSongPlayer-MKII',
-              )
-            }
-          >
-            std-microblock/LiveSongPlayer-MKII
-          </a>
-        </p>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <p>最后祝各位使用愉快吧~</p>
       </div>
 
       <div style={{ display: 'flex', gap: '4px' }}>
-        <a
-          className="false u-ibtn5 u-ibtnsz8 cmd-button cmd-button-outlineSec cmd-button-size-m cmd-button-outline-sec button-item"
-          style={{ display: 'flex', alignItems: 'center', background: 'transparent' }}
+        <CommandButton
           onClick={() =>
             betterncm.ncm.openUrl('https://github.com/lgc2333/BetterNCM-6K-Labs/issues')
           }
         >
           前往 GitHub Issues 反馈 Bug 或提出建议
-        </a>
+        </CommandButton>
       </div>
     </div>
   )
@@ -226,4 +229,63 @@ export function Config() {
 
 export function ConfigWrapper() {
   return <Config />
+}
+
+function StatusRow(props: {
+  label: string
+  value: string
+  ok: boolean
+  detail?: string
+}) {
+  return (
+    <div style={rowStyle}>
+      <div>{props.label}</div>
+      <div style={{ textAlign: 'right' }}>
+        <span style={{ color: props.ok ? 'green' : 'red' }}>{props.value}</span>
+        {props.detail ? (
+          <>
+            <br />
+            <span style={{ color: 'red' }}>{props.detail}</span>
+          </>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
+function CommandButton(props: { children: ReactNode; onClick: () => void }) {
+  return (
+    <a
+      className="false u-ibtn5 u-ibtnsz8 cmd-button cmd-button-outlineSec cmd-button-size-m cmd-button-outline-sec button-item"
+      style={buttonStyle}
+      onClick={props.onClick}
+    >
+      {props.children}
+    </a>
+  )
+}
+
+function serverStatusLabel(status: ServerStatus): string {
+  if (status.state === 'up') return '运行中'
+
+  return {
+    starting: '启动中',
+    listening: '运行中',
+    stopped: '已停止',
+    failed: '启动失败',
+  }[status.reason]
+}
+
+function sourceStateLabel(state: SourceAdapterState): string {
+  return {
+    idle: '未启动',
+    waiting: '等待 InfLink-rs',
+    running: '运行中',
+    stopped: '已停止',
+    failed: '推送失败',
+  }[state]
+}
+
+function formatTimestamp(timestamp: number | undefined): string {
+  return timestamp ? new Date(timestamp).toLocaleTimeString() : '暂无'
 }

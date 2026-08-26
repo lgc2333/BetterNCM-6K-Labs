@@ -1,11 +1,27 @@
-import { backendSvrManager } from './backend'
-import { websocketService } from './service'
+import { nativeBridge } from './native'
+import { sixKLabsRuntime } from './runtime'
+import { sourceAdapter } from './source-adapter'
 import { ConfigWrapper } from './ui/config'
 import * as utils from './utils'
 
-function devModeFunc() {
+declare global {
+  interface SixKLabsDev {
+    nativeBridge: typeof import('./native').nativeBridge
+    runtime: typeof import('./runtime').sixKLabsRuntime
+    sourceAdapter: typeof import('./source-adapter').sourceAdapter
+    utils: typeof import('./utils')
+  }
+
+  // eslint-disable-next-line vars-on-top
+  var SixKLabs: SixKLabsDev | undefined
+}
+
+function setupDevMode() {
   console.log('6K-Labs dev mode enabled')
   globalThis.SixKLabs = {
+    nativeBridge,
+    runtime: sixKLabsRuntime,
+    sourceAdapter,
     utils,
   }
 }
@@ -17,20 +33,12 @@ plugin.onConfig(() => {
 })
 
 plugin.onLoad(async (_selfPlugin) => {
-  await utils.removeCmdTmpDir().catch(console.error)
-
-  backendSvrManager.addEventListener('started', () => {
-    websocketService.reconnect()
-  })
-  backendSvrManager.addEventListener('beforeKill', () => {
-    websocketService.shutdown()
-  })
-  backendSvrManager.addEventListener('stopped', () => {
-    websocketService.shutdown()
+  window.addEventListener('beforeunload', () => {
+    sixKLabsRuntime.stop()
   })
 })
 
 plugin.onAllPluginsLoaded(() => {
-  backendSvrManager.restart()
-  if (loadedPlugins['6k-labs'].devMode) devModeFunc()
+  sixKLabsRuntime.start()
+  if (loadedPlugins['6k-labs'].devMode) setupDevMode()
 })
