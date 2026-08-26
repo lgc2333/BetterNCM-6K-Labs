@@ -48,10 +48,12 @@ pub unsafe fn register_api(
     };
 
     let result = unsafe { (api.add_native_api)(args_ptr, args_len, identifier.as_ptr(), function) };
-    if result == 0 {
+    // BetterNCM's addNativeAPI returns true (nonzero) on success; the placeholder stub
+    // used outside the renderer process returns false (zero).
+    if result != 0 {
         Ok(())
     } else {
-        Err(format!("addNativeAPI returned {result} for {identifier:?}"))
+        Err(format!("addNativeAPI rejected {identifier:?}"))
     }
 }
 
