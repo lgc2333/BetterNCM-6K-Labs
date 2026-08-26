@@ -1,4 +1,4 @@
-import type { NativeDispatchMessage } from './native-dispatch'
+import type { NativeDispatchMessage } from './types'
 import { TypedEventTarget } from './utils'
 
 declare global {

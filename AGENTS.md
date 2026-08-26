@@ -1,5 +1,7 @@
 # 6K-Labs AGENTS.md
 
+Note: This package is intended to work within the `lgc2333/BetterNCM-Workspace` repository, as it relies on additional agent rules, configurations, and scripts contained therein. If you have not received any indication that you are operating under this repository, please stop now and notify the user.
+
 ## Project Structure
 
 - `src`
@@ -21,7 +23,7 @@
 - `pnpm run build`: build minified plugin JS, build the Rust native DLL, then copy metadata/assets.
 - `pnpm run build:dev`: build JS with inline sourcemaps, build the Rust native DLL, then copy metadata/assets.
 - `pnpm run build:js`: bundle only `src/main.ts`.
-- `pnpm run build:native`: compile `native/` into `dist/6k-labs-native.dll`.
+- `pnpm run build:native`: compile `native/`, then copy metadata/assets and the DLL via `scripts/post-build.ts`.
 - `pnpm run check`: run TypeScript checks and Rust tests/clippy.
 - `cargo test --manifest-path native/Cargo.toml`: run native cache/mapping tests.
 - `pnpm run analyze`: inspect the bundled JS output.

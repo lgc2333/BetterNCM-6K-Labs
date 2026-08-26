@@ -1,16 +1,17 @@
-import type { NativeSongInfo, UpdateStatePayload } from './native-dispatch'
 import type {
   IInfLinkApi,
+  NativeSongInfo,
   PlaybackStatus,
   PlayMode,
   SongInfo,
   TimelineInfo,
+  UpdateStatePayload,
   VolumeInfo,
-} from './third-party/inflink-api'
-import { buildCoverUpdate } from './cover'
+} from './types'
 import { nativeBridge } from './native'
 import { readCoverSettings } from './settings'
 import { TypedEventTarget } from './utils'
+import { buildCoverUpdate } from './utils/cover'
 
 const HEARTBEAT_INTERVAL = 5000
 const INFLINK_RETRY_INTERVAL = 500

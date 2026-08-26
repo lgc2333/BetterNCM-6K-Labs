@@ -4,7 +4,7 @@ import type {
   SongInfo,
   TimelineInfo,
   VolumeInfo,
-} from './third-party/inflink-api'
+} from '../third-party/inflink-api'
 
 export type NativeSongInfo = Omit<SongInfo, 'cover'>
 

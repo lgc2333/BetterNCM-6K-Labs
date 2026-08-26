@@ -1,6 +1,19 @@
-import type { CoverUpdate } from './native-dispatch'
-import type { CoverSettings } from './settings'
-import type { SongInfo } from './third-party/inflink-api'
+import type { CoverSettings } from '../settings'
+import type { CoverUpdate, SongInfo } from '../types'
+import { blobToDataUrl, tryParseUrl } from './common'
+
+export function isNeteaseImageUrl(url: URL): boolean {
+  const host = url.hostname.toLowerCase()
+  return host === 'music.126.net' || host.endsWith('.music.126.net')
+}
+
+async function fetchCoverBlob(url: string): Promise<Blob> {
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`cover fetch failed: HTTP ${response.status}`)
+  }
+  return response.blob()
+}
 
 export function getSelectedCoverUrl(
   coverUrl: string | undefined,
@@ -46,41 +59,5 @@ export async function buildCoverUpdate(
     value: await blobToDataUrl(blob),
     mode: 'base64url',
     quality: settings.coverQuality,
-  }
-}
-
-async function fetchCoverBlob(url: string): Promise<Blob> {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`cover fetch failed: HTTP ${response.status}`)
-  }
-  return response.blob()
-}
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.addEventListener('load', () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result)
-      } else {
-        reject(new TypeError('cover reader returned a non-string result'))
-      }
-    })
-    reader.addEventListener('error', () => reject(reader.error))
-    reader.readAsDataURL(blob)
-  })
-}
-
-function isNeteaseImageUrl(url: URL): boolean {
-  const host = url.hostname.toLowerCase()
-  return host === 'music.126.net' || host.endsWith('.music.126.net')
-}
-
-function tryParseUrl(value: string): URL | undefined {
-  try {
-    return new URL(value)
-  } catch {
-    return undefined
   }
 }
