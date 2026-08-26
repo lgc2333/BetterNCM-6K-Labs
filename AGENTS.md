@@ -23,8 +23,7 @@ Note: This package is intended to work within the `lgc2333/BetterNCM-Workspace` 
 - `pnpm run build`: build minified plugin JS, build the Rust native DLL, then copy metadata/assets.
 - `pnpm run build:dev`: build JS with inline sourcemaps, build the Rust native DLL, then copy metadata/assets.
 - `pnpm run build:native`: compile `native/` for i686 + x86_64 MSVC via `scripts/build-native.ts`, then copy metadata/assets via `scripts/post-build.ts`. Output DLLs follow BetterNCM naming: `6k-labs-native.dll` (ia32) and `6k-labs-native.dll.x64.dll` (x64 fallback).
-- `pnpm run check`: run TypeScript checks and Rust tests/clippy.
-- `cargo test --manifest-path native/Cargo.toml`: run native cache/mapping tests.
+- `pnpm test` (workspace) / `pnpm vitest run` (package): run Vitest unit tests. Pure tests use `*.test.ts` (node project); DOM-dependent ones `*.dom.test.ts` (happy-dom project). Native bridge, source adapter, and cover pipeline require DOM globals; adapter's FileReader-drain helper needs a module-load-captured real `setTimeout` because fake timers freeze happy-dom events.
 - `pnpm run analyze`: inspect the bundled JS output.
 - `pnpm run apply`: copy `dist/` into the BetterNCM dev plugin directory.
 

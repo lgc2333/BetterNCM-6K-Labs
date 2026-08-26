@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, SocketAddr, TcpListener};
 use std::sync::{
-    atomic::{AtomicBool, Ordering},
     Arc,
+    atomic::{AtomicBool, Ordering},
 };
 use std::thread::{self, JoinHandle};
 use std::time::Duration;
@@ -115,7 +115,7 @@ fn set_exclusive_addr_use(socket: &socket2::Socket) -> Result<(), String> {
     use std::os::windows::io::AsRawSocket;
 
     use windows_sys::Win32::Networking::WinSock::{
-        setsockopt, WSAGetLastError, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+        SO_EXCLUSIVEADDRUSE, SOL_SOCKET, WSAGetLastError, setsockopt,
     };
 
     let exclusive: i32 = 1;

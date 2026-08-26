@@ -200,8 +200,8 @@ impl CacheInner {
             .unwrap_or(timeline.total_ms)
             .max(timeline.total_ms);
         let current_ms = timeline.current_ms.min(duration_ms);
-        let duration_seconds = millis_to_seconds(duration_ms);
-        let current_seconds = millis_to_seconds(current_ms);
+        let duration_seconds = millis_to_f64_seconds(duration_ms);
+        let current_seconds = millis_to_f64_seconds(current_ms);
         let state_percent = if duration_ms == 0 {
             0.0
         } else {
@@ -216,7 +216,7 @@ impl CacheInner {
                 is_paused: playback_status != PlaybackStatus::Playing,
                 volume_percent,
                 seekbar_current_position: current_seconds,
-                seekbar_current_position_human: format_seconds(current_seconds),
+                seekbar_current_position_human: format_seconds(millis_to_seconds(current_ms)),
                 state_percent,
                 like_status: "INDIFFERENT".to_string(),
                 repeat_type: repeat_type(play_mode.repeat_mode).to_string(),
@@ -227,7 +227,7 @@ impl CacheInner {
                 album: song.album_name.clone(),
                 cover: self.cover.clone().unwrap_or_default(),
                 duration: duration_seconds,
-                duration_human: format_seconds(duration_seconds),
+                duration_human: format_seconds(millis_to_seconds(duration_ms)),
                 url: format!("https://music.163.com/song?id={id}"),
                 id,
                 is_video: false,
@@ -284,11 +284,18 @@ where
     serde_json::from_value(value.clone()).map_err(|error| format!("invalid {name}: {error}"))
 }
 
+/// Zero-Progress Hold: a reported position of 0 means the track load window
+/// (player may claim Playing while audio has not started and stalls back to 0),
+/// so the position is published verbatim instead of extrapolated.
 fn interpolated_timeline(
     timeline: TimelineSnapshot,
     playback_status: PlaybackStatus,
     now: Instant,
 ) -> TimelineSnapshot {
+    if timeline.current_ms == 0 {
+        return timeline;
+    }
+
     if playback_status != PlaybackStatus::Playing {
         return TimelineSnapshot {
             updated_at: now,
@@ -320,6 +327,10 @@ fn millis_to_seconds(ms: u64) -> u64 {
     ms / 1000
 }
 
+fn millis_to_f64_seconds(ms: u64) -> f64 {
+    ms as f64 / 1000.0
+}
+
 fn format_seconds(total_seconds: u64) -> String {
     let seconds = total_seconds % 60;
     let minutes = (total_seconds / 60) % 60;
@@ -345,7 +356,7 @@ impl Query {
                 has_song: false,
                 is_paused: true,
                 volume_percent: 0.0,
-                seekbar_current_position: 0,
+                seekbar_current_position: 0.0,
                 seekbar_current_position_human: "0:00".to_string(),
                 state_percent: 0.0,
                 like_status: "INDIFFERENT".to_string(),
@@ -356,7 +367,7 @@ impl Query {
                 title: String::new(),
                 album: String::new(),
                 cover: String::new(),
-                duration: 0,
+                duration: 0.0,
                 duration_human: "0:00".to_string(),
                 url: String::new(),
                 id: String::new(),
@@ -377,7 +388,7 @@ struct PlayerInfo {
     #[serde(rename = "volumePercent")]
     volume_percent: f64,
     #[serde(rename = "seekbarCurrentPosition")]
-    seekbar_current_position: u64,
+    seekbar_current_position: f64,
     #[serde(rename = "seekbarCurrentPositionHuman")]
     seekbar_current_position_human: String,
     #[serde(rename = "statePercent")]
@@ -394,7 +405,7 @@ struct TrackInfo {
     title: String,
     album: String,
     cover: String,
-    duration: u64,
+    duration: f64,
     #[serde(rename = "durationHuman")]
     duration_human: String,
     url: String,
@@ -468,23 +479,19 @@ mod tests {
         let query = cache.query();
 
         assert!(query.player.has_song);
-        assert!(query.player.is_paused);
+        assert_eq!(query.player.seekbar_current_position, 61.0);
         assert_eq!(query.player.volume_percent, 42.0);
-        assert_eq!(query.player.seekbar_current_position, 61);
         assert_eq!(query.player.seekbar_current_position_human, "1:01");
         assert_eq!(query.player.repeat_type, "ONE");
         assert_eq!(query.track.title, "Title");
         assert_eq!(query.track.author, "Artist");
-        assert_eq!(query.track.album, "Album");
+        assert_eq!(query.track.duration, 125.0);
         assert_eq!(query.track.id, "42");
-        assert_eq!(query.track.duration, 125);
         assert_eq!(query.track.duration_human, "2:05");
-        assert!(
-            query
-                .track
-                .cover
-                .starts_with("https://p1.music.126.net/a.jpg")
-        );
+        assert!(query
+            .track
+            .cover
+            .starts_with("https://p1.music.126.net/a.jpg"));
     }
 
     #[test]
@@ -527,5 +534,43 @@ mod tests {
 
         assert_eq!(query.track.id, "43");
         assert_eq!(query.track.cover, "old");
+    }
+
+    #[test]
+    fn extrapolates_playing_position_from_last_tick() {
+        let updated_at = Instant::now();
+        let snapshot = TimelineSnapshot {
+            current_ms: 500,
+            total_ms: 125_000,
+            updated_at,
+        };
+
+        let timeline = interpolated_timeline(
+            snapshot,
+            PlaybackStatus::Playing,
+            updated_at + Duration::from_secs(2),
+        );
+
+        assert_eq!(timeline.current_ms, 2_500);
+        assert_eq!(timeline.updated_at, updated_at + Duration::from_secs(2));
+    }
+
+    #[test]
+    fn holds_zero_progress_during_track_load_window() {
+        let updated_at = Instant::now();
+        let snapshot = TimelineSnapshot {
+            current_ms: 0,
+            total_ms: 125_000,
+            updated_at,
+        };
+
+        let timeline = interpolated_timeline(
+            snapshot,
+            PlaybackStatus::Playing,
+            updated_at + Duration::from_secs(5),
+        );
+
+        assert_eq!(timeline.current_ms, 0);
+        assert_eq!(timeline.updated_at, updated_at);
     }
 }
