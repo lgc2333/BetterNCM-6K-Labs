@@ -9,21 +9,21 @@
   "repository": "https://github.com/lgc2333/BetterNCM-6K-Labs",
   "main": "index.js",
   "scripts": {
-    "build:js:dev": "esbuild ./src/main.ts --bundle --outdir=dist --sourcemap=inline --target=chrome91",
-    "build:js": "esbuild ./src/main.ts --bundle --minify --outdir=dist --target=chrome91",
+    "build:js:dev": "vite build --mode development --sourcemap inline",
+    "build:js": "vite build",
     "build:native": "tsx ./scripts/build-native.ts && tsx ../../scripts/post-build.ts",
     "build:dev": "pnpm run build:js:dev && pnpm run build:native",
     "build": "pnpm run build:js && pnpm run build:native",
     "apply": "tsx ../../scripts/apply.ts",
-    "analyze": "esbuild --bundle ./src/main.ts --outdir=dist --minify --analyze=verbose",
     "check": "tsc -b --noEmit && cargo test --manifest-path ./native/Cargo.toml && cargo clippy --manifest-path ./native/Cargo.toml --target x86_64-pc-windows-msvc -- -D warnings"
   },
   "devDependencies": {
+    "@iconify/react": "^5.2.1",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "esbuild": "catalog:",
-    "tsx": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-css-injected-by-js": "^5.0.2",
     "vitest": "catalog:"
   }
 }

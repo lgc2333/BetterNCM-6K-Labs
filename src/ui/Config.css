@@ -1,0 +1,336 @@
+.sixk-config,
+.sixk-config * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.sixk-config {
+  --sixk-tx1: rgba(0, 0, 0, 0.88);
+  --sixk-tx2: rgba(0, 0, 0, 0.55);
+  --sixk-tx3: rgba(0, 0, 0, 0.38);
+  --sixk-line: rgba(0, 0, 0, 0.1);
+  --sixk-glass: rgba(255, 255, 255, 0.55);
+  --sixk-ctl: rgba(0, 0, 0, 0.05);
+  --sixk-ctl-hover: rgba(0, 0, 0, 0.09);
+  --sixk-ok: #14935c;
+  --sixk-err: #c93a52;
+  --sixk-accent: #c20c0c;
+  --sixk-on-accent: #ffffff;
+  --sixk-seg-active: rgba(0, 0, 0, 0.1);
+
+  max-width: 660px;
+  margin: 0 auto;
+  font-size: 14px;
+  color: var(--sixk-tx1);
+}
+
+.sixk-config[data-theme='dark'] {
+  --sixk-tx1: rgba(255, 255, 255, 0.94);
+  --sixk-tx2: rgba(255, 255, 255, 0.62);
+  --sixk-tx3: rgba(255, 255, 255, 0.4);
+  --sixk-line: rgba(255, 255, 255, 0.12);
+  --sixk-glass: rgba(255, 255, 255, 0.07);
+  --sixk-ctl: rgba(255, 255, 255, 0.08);
+  --sixk-ctl-hover: rgba(255, 255, 255, 0.14);
+  --sixk-ok: #3ecf8e;
+  --sixk-err: #ff8091;
+  --sixk-accent: #ff5c5c;
+  --sixk-on-accent: #ffffff;
+  --sixk-seg-active: rgba(255, 255, 255, 0.14);
+}
+
+.sixk-config a,
+.sixk-config button,
+.sixk-config input {
+  font: inherit;
+  color: inherit;
+}
+.sixk-config button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+.sixk-config :focus-visible {
+  outline: 2px solid var(--sixk-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.sixk-config .page-head {
+  margin-bottom: 26px;
+}
+.sixk-config .page-head h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--sixk-tx1);
+}
+.sixk-config .page-head p {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--sixk-tx2);
+}
+.sixk-config .sec-label {
+  margin: 26px 0 10px;
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  color: var(--sixk-tx3);
+}
+
+.sixk-config .status-card {
+  margin-bottom: 10px;
+  padding: 13px 15px;
+  background: var(--sixk-glass);
+  border: 1px solid var(--sixk-line);
+  border-radius: 14px;
+  backdrop-filter: blur(24px);
+}
+.sixk-config .status-card .st-item + .st-item {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--sixk-line);
+}
+.sixk-config .st-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.sixk-config .st-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sixk-tx3);
+}
+.sixk-config .st-label .sixk-icon svg {
+  width: 15px;
+  height: 15px;
+}
+.sixk-config .st-value {
+  flex: none;
+  font-size: 15px;
+  font-weight: 600;
+}
+.sixk-config .st-value.ok {
+  color: var(--sixk-ok);
+}
+.sixk-config .st-value.err {
+  color: var(--sixk-err);
+}
+.sixk-config .st-url {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+}
+.sixk-config .st-url .u {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11.5px;
+  color: var(--sixk-tx2);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sixk-config .st-meta {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding-left: 10px;
+  font-size: 12px;
+  color: var(--sixk-tx2);
+}
+.sixk-config .st-meta .sixk-icon svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0.75;
+}
+.sixk-config .st-detail {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--sixk-tx2);
+  line-height: 1.5;
+}
+.sixk-config .icon-btn {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  color: var(--sixk-tx2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.sixk-config .icon-btn:hover {
+  background: var(--sixk-ctl-hover);
+  color: var(--sixk-tx1);
+}
+.sixk-config .st-url .icon-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.sixk-config .row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--sixk-glass);
+  border: 1px solid var(--sixk-line);
+  border-radius: 14px;
+  backdrop-filter: blur(24px);
+}
+.sixk-config .row + .row {
+  margin-top: 10px;
+}
+.sixk-config .r-icon {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--sixk-ctl);
+  border-radius: 10px;
+  color: var(--sixk-tx2);
+}
+.sixk-config .r-icon .sixk-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.sixk-config .r-text {
+  flex: 1;
+  min-width: 0;
+}
+.sixk-config .r-title {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--sixk-tx1);
+}
+.sixk-config .r-desc {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--sixk-tx2);
+  line-height: 1.45;
+}
+.sixk-config .r-action {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+}
+
+.sixk-config .text-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--sixk-tx2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.sixk-config .text-btn:hover {
+  background: var(--sixk-ctl-hover);
+  color: var(--sixk-tx1);
+}
+.sixk-config .text-btn.danger:hover {
+  color: var(--sixk-err);
+}
+.sixk-config .text-btn.accent {
+  color: var(--sixk-accent);
+}
+.sixk-config .text-btn.armed {
+  background: var(--sixk-err);
+  color: var(--sixk-on-accent);
+}
+
+.sixk-config .seg {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--sixk-ctl);
+  border-radius: 10px;
+}
+.sixk-config .seg button {
+  padding: 5px 11px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--sixk-tx2);
+  transition:
+    background 0.15s,
+    color 0.15s;
+  white-space: nowrap;
+}
+.sixk-config .seg button:hover {
+  color: var(--sixk-tx1);
+}
+.sixk-config .seg button.on {
+  background: var(--sixk-seg-active);
+  color: var(--sixk-tx1);
+  font-weight: 600;
+}
+
+.sixk-config .quality-input {
+  width: 110px;
+  padding: 7px 10px;
+  background: var(--sixk-ctl);
+  border: 1px solid var(--sixk-line);
+  border-radius: 9px;
+  color: var(--sixk-tx1);
+  font-size: 13px;
+}
+.sixk-config .quality-input:focus {
+  border-color: var(--sixk-accent);
+  outline: none;
+}
+
+.sixk-config .c-list {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--sixk-tx2);
+  line-height: 1.8;
+}
+.sixk-config .c-list a {
+  color: var(--sixk-accent);
+  text-decoration: none;
+}
+.sixk-config .c-list a:hover {
+  text-decoration: underline;
+}
+.sixk-config .credits {
+  margin: 8px 0 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--sixk-tx2);
+  line-height: 2;
+}
+.sixk-config .credits a {
+  color: var(--sixk-accent);
+  text-decoration: none;
+}
+.sixk-config .credits a:hover {
+  text-decoration: underline;
+}
+
+.sixk-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  padding: 9px 16px;
+  background: rgba(20, 20, 24, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-size: 13px;
+  color: #ffffff;
+  z-index: 9999;
+  pointer-events: none;
+}

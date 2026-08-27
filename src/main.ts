@@ -1,7 +1,7 @@
 import { nativeBridge } from './native'
 import { sixKLabsRuntime } from './runtime'
 import { sourceAdapter } from './source-adapter'
-import { ConfigWrapper } from './ui/config'
+import { ConfigWrapper } from './ui/Config'
 import * as utils from './utils'
 
 declare global {
