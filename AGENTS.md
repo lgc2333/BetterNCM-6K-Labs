@@ -9,13 +9,14 @@ Note: This package is intended to work within the `lgc2333/BetterNCM-Workspace` 
   - `native.ts`: BetterNCM native call adapter.
   - `source-adapter.ts`: InfLink-rs subscription and native dispatch adapter.
   - `cover.ts`, `settings.ts`, `inflink-api.ts`: cover contract, plugin config, and InfLink-rs public types.
-  - `ui/`: TSX UI, including the config panel.
+  - `ui/`: TSX UI: config panel (`config.tsx`, styled via an injected scoped `<style>`, rendered through the page-global React with the `h` JSX factory) and NCM theme detection (`theme.ts`).
   - `utils/`: shared package utilities.
 - `native/`: Rust `cdylib` crate `better_ncm_6k_labs_native`.
 - `dist/`: generated build output.
 - `docs/`
   - `adr/`: accepted architecture decisions for this package.
   - `archived/`: archived handoffs and research notes; ADRs win on conflicts.
+- `DESIGN.md`: design token spec (design-md format) for the settings page; UI work must follow it, including the no-`font-family` rule.
 - `manifest.json`, `preview.png`: plugin metadata and preview copied into `dist/` after builds.
 
 ## Commands
