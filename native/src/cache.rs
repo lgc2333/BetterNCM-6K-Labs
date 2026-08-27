@@ -488,10 +488,12 @@ mod tests {
         assert_eq!(query.track.duration, 125.0);
         assert_eq!(query.track.id, "42");
         assert_eq!(query.track.duration_human, "2:05");
-        assert!(query
-            .track
-            .cover
-            .starts_with("https://p1.music.126.net/a.jpg"));
+        assert!(
+            query
+                .track
+                .cover
+                .starts_with("https://p1.music.126.net/a.jpg")
+        );
     }
 
     #[test]

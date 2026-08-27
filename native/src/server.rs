@@ -4,7 +4,7 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 use std::thread::{self, JoinHandle};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use tiny_http::Server;
 
@@ -14,6 +14,8 @@ use crate::status::{ServerStatus, StatusStore};
 
 pub const SERVER_PORT: u16 = 9863;
 const REQUEST_POLL_TIMEOUT: Duration = Duration::from_millis(250);
+const PORT_RELEASE_TIMEOUT: Duration = Duration::from_secs(2);
+const PORT_RETRY_INTERVAL: Duration = Duration::from_millis(25);
 
 pub struct ServerHandle {
     running: Arc<AtomicBool>,
@@ -24,6 +26,14 @@ pub struct ServerHandle {
 impl ServerHandle {
     pub fn start(cache: Arc<Cache>, status: StatusStore) -> Result<Self, String> {
         let listener = create_exclusive_listener()?;
+        Self::from_listener(listener, cache, status)
+    }
+
+    pub fn from_listener(
+        listener: TcpListener,
+        cache: Arc<Cache>,
+        status: StatusStore,
+    ) -> Result<Self, String> {
         let server = Server::from_listener(listener, None).map_err(|error| {
             format!("failed to start HTTP server on 127.0.0.1:{SERVER_PORT}: {error}")
         })?;
@@ -83,6 +93,27 @@ fn serve_loop(
 
 fn create_exclusive_listener() -> Result<TcpListener, String> {
     bind_exclusive(SocketAddr::from((Ipv4Addr::LOCALHOST, SERVER_PORT)))
+}
+
+/// Binds the server port after a stop, retrying until the previous tiny_http
+/// accept thread releases the listening socket. tiny_http's `Server::drop` only
+/// signals that thread to exit; it does not wait for it, so the socket may stay
+/// open briefly after `ServerHandle::stop` returns.
+pub fn bind_after_stop() -> Result<TcpListener, String> {
+    wait_port_released(SocketAddr::from((Ipv4Addr::LOCALHOST, SERVER_PORT)))
+}
+
+fn wait_port_released(addr: SocketAddr) -> Result<TcpListener, String> {
+    let deadline = Instant::now() + PORT_RELEASE_TIMEOUT;
+    loop {
+        match bind_exclusive(addr) {
+            Ok(listener) => return Ok(listener),
+            Err(_error) if Instant::now() < deadline => {
+                thread::sleep(PORT_RETRY_INTERVAL);
+            }
+            Err(error) => return Err(error),
+        }
+    }
 }
 
 fn bind_exclusive(addr: SocketAddr) -> Result<TcpListener, String> {
@@ -151,5 +182,37 @@ mod tests {
 
         assert!(second.is_err(), "second bind on active port must fail");
         assert!(second.unwrap_err().contains("可能被其他程序占用"));
+    }
+
+    #[test]
+    fn waits_for_port_release() {
+        let first = bind_exclusive("127.0.0.1:0".parse().unwrap())
+            .expect("first exclusive bind should succeed");
+        let addr = first.local_addr().unwrap();
+        let releaser = thread::spawn(move || {
+            thread::sleep(Duration::from_millis(100));
+            drop(first);
+        });
+
+        let listener = wait_port_released(addr).expect("port should become bindable");
+
+        releaser.join().unwrap();
+        drop(listener);
+    }
+
+    #[test]
+    fn stop_releases_port_for_rebind() {
+        let status = StatusStore::new();
+        let listener =
+            bind_exclusive("127.0.0.1:0".parse().unwrap()).expect("exclusive bind should succeed");
+        let addr = listener.local_addr().unwrap();
+        let handle =
+            ServerHandle::from_listener(listener, Arc::new(Cache::default()), status.clone())
+                .expect("server should start from listener");
+
+        handle.stop(&status);
+
+        let rebound = wait_port_released(addr).expect("port should be rebindable after stop");
+        drop(rebound);
     }
 }

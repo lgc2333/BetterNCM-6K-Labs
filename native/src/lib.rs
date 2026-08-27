@@ -10,7 +10,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 
 use abi::{PluginApi, no_args, read_string_arg, register_api, string_args, v8_args};
 use cache::Cache;
-use server::ServerHandle;
+use server::{ServerHandle, bind_after_stop};
 use status::{ServerStatus, StatusStore};
 
 struct App {
@@ -64,7 +64,19 @@ impl App {
 
     fn restart(&self) -> Result<ServerStatus, String> {
         self.terminate();
-        self.initialize()
+        let mut server = self.server.lock().expect("server lock poisoned");
+        self.status.set(ServerStatus::starting());
+        let listener = bind_after_stop()?;
+        match ServerHandle::from_listener(listener, Arc::clone(&self.cache), self.status.clone()) {
+            Ok(handle) => {
+                *server = Some(handle);
+                Ok(self.status.get())
+            }
+            Err(error) => {
+                self.status.set(ServerStatus::failed(error.clone()));
+                Err(error)
+            }
+        }
     }
 
     fn dispatch(&self, message_json: &str) -> Result<(), String> {
