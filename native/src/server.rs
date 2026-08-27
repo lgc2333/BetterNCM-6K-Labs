@@ -116,7 +116,7 @@ fn wait_port_released(addr: SocketAddr) -> Result<TcpListener, String> {
     }
 }
 
-fn bind_exclusive(addr: SocketAddr) -> Result<TcpListener, String> {
+pub(crate) fn bind_exclusive(addr: SocketAddr) -> Result<TcpListener, String> {
     let socket = socket2::Socket::new(
         socket2::Domain::for_address(addr),
         socket2::Type::STREAM,

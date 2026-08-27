@@ -66,7 +66,13 @@ impl App {
         self.terminate();
         let mut server = self.server.lock().expect("server lock poisoned");
         self.status.set(ServerStatus::starting());
-        let listener = bind_after_stop()?;
+        let listener = match bind_after_stop() {
+            Ok(listener) => listener,
+            Err(error) => {
+                self.status.set(ServerStatus::failed(error.clone()));
+                return Err(error);
+            }
+        };
         match ServerHandle::from_listener(listener, Arc::clone(&self.cache), self.status.clone()) {
             Ok(handle) => {
                 *server = Some(handle);
@@ -149,5 +155,32 @@ unsafe extern "C" fn dispatch(args: *mut *mut c_void) -> *mut c_char {
     match unsafe { read_string_arg(args, 0) }.and_then(|message| App::global().dispatch(&message)) {
         Ok(()) => native_result::ok_empty(),
         Err(error) => native_result::err(error),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::SocketAddr;
+
+    use super::*;
+    use server::bind_exclusive;
+    use status::{ServerReason, ServerState};
+
+    /// Regression test: `bind_after_stop()?` used to early-return while the
+    /// status store was still `starting`, leaving the UI stuck on 启动中.
+    #[test]
+    fn restart_failure_marks_status_failed() {
+        let app = App::global();
+        // Occupy the port ourselves; if something else already holds it, that
+        // is an equally valid conflict for this test.
+        let _blocker = bind_exclusive(SocketAddr::from(([127, 0, 0, 1], server::SERVER_PORT))).ok();
+
+        app.restart()
+            .expect_err("restart must fail while the port is occupied");
+
+        let status = app.status();
+        assert_eq!(status.state, ServerState::Down);
+        assert_eq!(status.reason, ServerReason::Failed);
+        assert!(status.detail.is_some(), "failure must carry a detail");
     }
 }
