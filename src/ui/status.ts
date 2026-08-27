@@ -6,21 +6,23 @@ export type StatusTone = 'ok' | 'err' | 'neutral'
 export interface StatusView {
   text: string
   tone: StatusTone
+  detail?: string
 }
 
 export function statusValueClass(tone: StatusTone): string {
   return tone === 'neutral' ? 'st-value' : `st-value ${tone}`
 }
 
-export function serverStatusView(status: ServerStatus): StatusView {
+export function serverStatusView(status: ServerStatus, lastError?: string): StatusView {
   if (status.state === 'up') return { text: '运行中', tone: 'ok' }
+  const detail = status.detail ?? lastError
   switch (status.reason) {
     case 'starting':
       return { text: '启动中', tone: 'neutral' }
     case 'failed':
-      return { text: '启动失败', tone: 'err' }
+      return { text: '启动失败', tone: 'err', detail }
     default:
-      return { text: '已停止', tone: 'neutral' }
+      return { text: '已停止', tone: 'neutral', detail }
   }
 }
 

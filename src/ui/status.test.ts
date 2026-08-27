@@ -44,7 +44,30 @@ describe('serverStatusView', () => {
 
   it('shows red 启动失败 on failure', () => {
     const status: ServerStatus = { state: 'down', reason: 'failed', detail: 'boom' }
-    expect(serverStatusView(status)).toEqual({ text: '启动失败', tone: 'err' })
+    expect(serverStatusView(status)).toEqual({
+      text: '启动失败',
+      tone: 'err',
+      detail: 'boom',
+    })
+  })
+
+  it('falls back to the native last error while stopped', () => {
+    const status: ServerStatus = { state: 'down', reason: 'stopped' }
+    expect(serverStatusView(status, '插件原生模块加载失败')).toEqual({
+      text: '已停止',
+      tone: 'neutral',
+      detail: '插件原生模块加载失败',
+    })
+  })
+
+  it('prefers the native detail over a stale last error', () => {
+    const status: ServerStatus = { state: 'down', reason: 'failed', detail: 'boom' }
+    expect(serverStatusView(status, 'stale').detail).toBe('boom')
+  })
+
+  it('omits the detail while up', () => {
+    const status: ServerStatus = { state: 'up', reason: 'listening' }
+    expect(serverStatusView(status, 'ignored').detail).toBeUndefined()
   })
 })
 

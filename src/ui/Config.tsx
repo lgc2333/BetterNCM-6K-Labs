@@ -101,6 +101,7 @@ export function Config() {
   const [stopArmed, setStopArmed] = React.useState(false)
   const [presetsOpen, setPresetsOpen] = React.useState(false)
   const stopTimer = React.useRef<number | undefined>(undefined)
+  const serverView = serverStatusView(serverStatus, nativeBridge.lastError)
   const { toastMessage, showToast } = useToast(TOAST_DURATION_MS)
 
   React.useEffect(() => {
@@ -167,11 +168,7 @@ export function Config() {
 
       <div className="sec-label">服务状态</div>
       <div className="status-card">
-        <StatusItem
-          icon="lucide:server"
-          label="本地 HTTP 服务"
-          view={serverStatusView(serverStatus)}
-        >
+        <StatusItem icon="lucide:server" label="本地 HTTP 服务" view={serverView}>
           {serverStatus.state === 'up' ? (
             <div className="st-url">
               <span className="u">{QUERY_URL}</span>
@@ -187,8 +184,8 @@ export function Config() {
               </button>
             </div>
           ) : null}
-          {serverStatus.state !== 'up' && serverStatus.detail ? (
-            <div className="st-detail">{serverStatus.detail}</div>
+          {serverView.detail ? (
+            <div className="st-detail">{serverView.detail}</div>
           ) : null}
         </StatusItem>
         <StatusItem
