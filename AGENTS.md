@@ -29,5 +29,4 @@ Note: This package is intended to work within the `lgc2333/BetterNCM-Workspace` 
 
 ## Rules
 
-- ADRs in `docs/adr/` are the source of truth; archived docs are historical.
 - Keep JavaScript as a push adapter only; Rust owns cache freshness, HTTP, and query mapping.
