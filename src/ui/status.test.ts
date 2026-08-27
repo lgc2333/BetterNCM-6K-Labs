@@ -49,7 +49,13 @@ describe('serverStatusView', () => {
 })
 
 describe('infLinkView', () => {
-  it('maps availability to 在线/离线', () => {
+  it('shows the v-prefixed version while online', () => {
+    expect(
+      infLinkView(diagnostics({ infLinkAvailable: true, infLinkVersion: '1.2.3' })),
+    ).toEqual({ text: 'v1.2.3', tone: 'ok' })
+    expect(
+      infLinkView(diagnostics({ infLinkAvailable: true, infLinkVersion: 'v2.0' })),
+    ).toEqual({ text: 'v2.0', tone: 'ok' })
     expect(infLinkView(diagnostics({ infLinkAvailable: true }))).toEqual({
       text: '在线',
       tone: 'ok',

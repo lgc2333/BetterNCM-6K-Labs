@@ -25,7 +25,6 @@ import { Toast, useToast } from './Toast'
 import './Config.css'
 
 const ISSUES_URL = 'https://github.com/lgc2333/BetterNCM-6K-Labs/issues'
-const QUALITY_DATALIST_ID = 'sixk-quality-presets'
 const TOAST_DURATION_MS = 1800
 const STOP_CONFIRM_MS = 2600
 
@@ -35,9 +34,10 @@ function Row(props: {
   desc?: ReactNode
   action?: ReactNode
   children?: ReactNode
+  className?: string
 }) {
   return (
-    <div className="row">
+    <div className={props.className ? `row ${props.className}` : 'row'}>
       <div className="r-icon">
         <Icon name={props.icon} />
       </div>
@@ -99,6 +99,7 @@ export function Config() {
   const [coverSettings, setCoverSettings] = React.useState(readCoverSettings)
   const [qualityInput, setQualityInput] = React.useState(coverSettings.coverQuality)
   const [stopArmed, setStopArmed] = React.useState(false)
+  const [presetsOpen, setPresetsOpen] = React.useState(false)
   const stopTimer = React.useRef<number | undefined>(undefined)
   const { toastMessage, showToast } = useToast(TOAST_DURATION_MS)
 
@@ -252,24 +253,44 @@ export function Config() {
         }
       />
       <Row
+        className={presetsOpen ? 'lifted' : ''}
         icon="lucide:ruler"
         title="尺寸"
         desc="预设或 1–4096 任意整数"
         action={
-          <>
+          <div className="quality-box">
             <input
               className="quality-input"
-              list={QUALITY_DATALIST_ID}
               value={qualityInput}
+              placeholder="256"
               onChange={(ev) => setQualityInput(ev.currentTarget.value)}
-              onBlur={applyCoverQuality}
+              onFocus={() => setPresetsOpen(true)}
+              onBlur={() => {
+                setPresetsOpen(false)
+                applyCoverQuality()
+              }}
+              onKeyDown={(ev) => {
+                if (ev.key === 'Enter') ev.currentTarget.blur()
+              }}
             />
-            <datalist id={QUALITY_DATALIST_ID}>
-              {COVER_QUALITY_PRESETS.map((preset) => (
-                <option key={preset} value={preset} />
-              ))}
-            </datalist>
-          </>
+            {presetsOpen ? (
+              <div className="quality-pop" onMouseDown={(ev) => ev.preventDefault()}>
+                {COVER_QUALITY_PRESETS.map((preset) => (
+                  <button
+                    key={preset}
+                    className={preset === qualityInput ? 'on' : ''}
+                    onClick={() => {
+                      setQualityInput(preset)
+                      setCoverSettings(writeCoverSettings({ coverQuality: preset }))
+                      setPresetsOpen(false)
+                    }}
+                  >
+                    {preset}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
         }
       />
 

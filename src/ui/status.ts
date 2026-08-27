@@ -26,9 +26,16 @@ export function serverStatusView(status: ServerStatus): StatusView {
 
 export function infLinkView(diagnostics: SourceDiagnostics): StatusView {
   if (diagnostics.state === 'stopped') return { text: '已断开', tone: 'neutral' }
-  if (diagnostics.infLinkAvailable) return { text: '在线', tone: 'ok' }
+  if (diagnostics.infLinkAvailable) {
+    return { text: infLinkVersionText(diagnostics.infLinkVersion), tone: 'ok' }
+  }
   if (diagnostics.state === 'failed') return { text: '离线', tone: 'err' }
   return { text: '离线', tone: 'neutral' }
+}
+
+function infLinkVersionText(version: string | undefined): string {
+  if (version === undefined) return '在线'
+  return version.startsWith('v') ? version : `v${version}`
 }
 
 const INFLINK_MISSING_DETAIL = '未检测到 InfLink-rs，或版本过低'
