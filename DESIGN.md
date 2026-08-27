@@ -155,11 +155,11 @@ Two token sets exist per role: a **light-host** set (default name) and a **dark-
 
 ## Typography
 
-No `fontFamily` is declared anywhere: the page inherits NetEase Cloud Music's own font settings, so personality comes only from weight and scale. Hierarchy: `page-title` (22/700) → `section-label` (11.5/650, +0.14em tracking, all-caps feel) → `row-title` (14/600) → `body`/`caption` (14/12). **All status values share one size - `status-value` 15px/600** - color is the only differentiator between ok and error. `data-mono` (11.5px, inherited face) is reserved for URLs and numeric heartbeats.
+No `fontFamily` is declared anywhere: the page inherits NetEase Cloud Music's own font settings, so personality comes only from weight and scale. Hierarchy: `page-title` (22/700) → `section-label` (11.5/650, +0.14em tracking, all-caps feel) → `row-title` (14/600) → `body`/`caption` (14/12). **All status values share one size - `status-value` 15px/600** - color is the only differentiator between ok and error. `data-mono` (11.5px, inherited face) is reserved for URLs.
 
 ## Layout
 
-Single column, max-width 660px, 24px page padding. Vertical rhythm: section label (26px top / 10px bottom) → rows with 10px gaps. Inside the status card, items stack vertically with hairline dividers (12px padding each side). Status card rows are `label left / status value right`; auxiliary lines (heartbeat, query URL) sit under the value, right-aligned cluster for meta, URL row keeps copy/open icon buttons adjacent to the address.
+Single column, max-width 660px, 24px page padding. Vertical rhythm: section label (26px top / 10px bottom) → rows with 10px gaps. Status items share the row anatomy - icon tile, prominent `row-title` label, status value right - but all three stack inside one card with hairline dividers (12px padding each side). Auxiliary lines (query URL, error detail) sit under the item title; the URL row keeps copy/open icon buttons adjacent to the address.
 
 ## Elevation & Depth
 

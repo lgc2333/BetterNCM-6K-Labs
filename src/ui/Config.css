@@ -57,6 +57,12 @@
   border-radius: 6px;
 }
 
+.sixk-config .sixk-icon {
+  display: inline-flex;
+  flex: none;
+  line-height: 0;
+}
+
 .sixk-config .page-head {
   margin-bottom: 26px;
 }
@@ -64,11 +70,6 @@
   font-size: 22px;
   font-weight: 700;
   color: var(--sixk-tx1);
-}
-.sixk-config .page-head p {
-  margin-top: 6px;
-  font-size: 13px;
-  color: var(--sixk-tx2);
 }
 .sixk-config .sec-label {
   margin: 26px 0 10px;
@@ -91,22 +92,10 @@
   padding-top: 12px;
   border-top: 1px solid var(--sixk-line);
 }
-.sixk-config .st-head {
+.sixk-config .st-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.sixk-config .st-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--sixk-tx3);
-}
-.sixk-config .st-label .sixk-icon svg {
-  width: 15px;
-  height: 15px;
+  gap: 14px;
 }
 .sixk-config .st-value {
   flex: none;
@@ -133,21 +122,6 @@
   color: var(--sixk-tx2);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.sixk-config .st-meta {
-  display: flex;
-  flex: none;
-  align-items: center;
-  gap: 6px;
-  margin-left: auto;
-  padding-left: 10px;
-  font-size: 12px;
-  color: var(--sixk-tx2);
-}
-.sixk-config .st-meta .sixk-icon svg {
-  width: 13px;
-  height: 13px;
-  opacity: 0.75;
 }
 .sixk-config .st-detail {
   margin-top: 6px;
@@ -200,6 +174,11 @@
   background: var(--sixk-ctl);
   border-radius: 10px;
   color: var(--sixk-tx2);
+}
+.sixk-config .st-url .icon-btn {
+  width: 18px;
+  height: 18px;
+  margin: -2px 0;
 }
 .sixk-config .r-icon .sixk-icon svg {
   width: 17px;
@@ -293,10 +272,12 @@
 
 .sixk-config .c-list {
   margin: 8px 0 0;
-  padding-left: 18px;
   font-size: 13px;
   color: var(--sixk-tx2);
-  line-height: 1.8;
+  line-height: 1.6;
+}
+.sixk-config .c-list li {
+  list-style: decimal inside;
 }
 .sixk-config .c-list a {
   color: var(--sixk-accent);
@@ -310,7 +291,7 @@
   list-style: none;
   font-size: 13px;
   color: var(--sixk-tx2);
-  line-height: 2;
+  line-height: 1.6;
 }
 .sixk-config .credits a {
   color: var(--sixk-accent);

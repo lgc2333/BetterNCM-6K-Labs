@@ -15,7 +15,6 @@ import { copyText } from './clipboard'
 import { Icon } from './Icon'
 import {
   adapterView,
-  formatHeartbeat,
   infLinkDetail,
   infLinkView,
   serverStatusView,
@@ -60,14 +59,14 @@ function StatusItem(props: {
 }) {
   return (
     <div className="st-item">
-      <div className="st-head">
-        <div className="st-label">
-          <Icon name={props.icon} />
-          {props.label}
-        </div>
-        <div className={statusValueClass(props.view.tone)}>{props.view.text}</div>
+      <div className="r-icon">
+        <Icon name={props.icon} />
       </div>
-      {props.children}
+      <div className="r-text">
+        <div className="r-title">{props.label}</div>
+        {props.children}
+      </div>
+      <div className={statusValueClass(props.view.tone)}>{props.view.text}</div>
     </div>
   )
 }
@@ -163,7 +162,6 @@ export function Config() {
     <div className="sixk-config" data-theme={themeMode}>
       <div className="page-head">
         <h1>6K Labs</h1>
-        <p>把网易云的播放状态推送给 6klabs.com 的小组件</p>
       </div>
 
       <div className="sec-label">服务状态</div>
@@ -186,10 +184,6 @@ export function Config() {
               >
                 <Icon name="lucide:external-link" />
               </button>
-              <div className="st-meta">
-                <Icon name="lucide:heart" />
-                心跳 {formatHeartbeat(sourceDiagnostics.lastHeartbeatAt)}
-              </div>
             </div>
           ) : null}
         </StatusItem>
