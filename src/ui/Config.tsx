@@ -186,6 +186,9 @@ export function Config() {
               </button>
             </div>
           ) : null}
+          {serverStatus.state !== 'up' && serverStatus.detail ? (
+            <div className="st-detail">{serverStatus.detail}</div>
+          ) : null}
         </StatusItem>
         <StatusItem
           icon="lucide:link"

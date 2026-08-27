@@ -1,22 +1,21 @@
 import type { ServerStatus } from '../native'
 
 import type { SourceDiagnostics } from '../source-adapter'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import {
   adapterView,
-  formatHeartbeat,
   infLinkDetail,
   infLinkView,
   serverStatusView,
   statusValueClass,
 } from './status'
 
-function diagnostics (overrides: Partial<SourceDiagnostics>): SourceDiagnostics {
-  return ({
+function diagnostics(overrides: Partial<SourceDiagnostics>): SourceDiagnostics {
+  return {
     state: 'idle',
     infLinkAvailable: false,
     ...overrides,
-  }) as SourceDiagnostics
+  } as SourceDiagnostics
 }
 
 describe('statusValueClass', () => {
@@ -28,14 +27,24 @@ describe('statusValueClass', () => {
 })
 
 describe('serverStatusView', () => {
-  it('shows the port while up', () => {
+  it('shows 运行中 while up', () => {
     const status: ServerStatus = { state: 'up', reason: 'listening' }
-    expect(serverStatusView(status)).toEqual({ text: '运行中 · 9863', tone: 'ok' })
+    expect(serverStatusView(status)).toEqual({ text: '运行中', tone: 'ok' })
   })
 
-  it('shows 未运行 while down', () => {
+  it('shows neutral 已停止 while deliberately stopped', () => {
     const status: ServerStatus = { state: 'down', reason: 'stopped' }
-    expect(serverStatusView(status)).toEqual({ text: '未运行', tone: 'err' })
+    expect(serverStatusView(status)).toEqual({ text: '已停止', tone: 'neutral' })
+  })
+
+  it('shows neutral 启动中 while starting', () => {
+    const status: ServerStatus = { state: 'down', reason: 'starting' }
+    expect(serverStatusView(status)).toEqual({ text: '启动中', tone: 'neutral' })
+  })
+
+  it('shows red 启动失败 on failure', () => {
+    const status: ServerStatus = { state: 'down', reason: 'failed', detail: 'boom' }
+    expect(serverStatusView(status)).toEqual({ text: '启动失败', tone: 'err' })
   })
 })
 
@@ -45,13 +54,31 @@ describe('infLinkView', () => {
       text: '在线',
       tone: 'ok',
     })
-    expect(infLinkView(diagnostics({}))).toEqual({ text: '离线', tone: 'err' })
+    expect(infLinkView(diagnostics({}))).toEqual({ text: '离线', tone: 'neutral' })
+  })
+
+  it('shows neutral 已断开 after a deliberate stop', () => {
+    expect(infLinkView(diagnostics({ state: 'stopped' }))).toEqual({
+      text: '已断开',
+      tone: 'neutral',
+    })
+  })
+
+  it('shows red 离线 only on adapter failure', () => {
+    expect(infLinkView(diagnostics({ state: 'failed' }))).toEqual({
+      text: '离线',
+      tone: 'err',
+    })
   })
 })
 
 describe('infLinkDetail', () => {
   it('is undefined while available', () => {
     expect(infLinkDetail(diagnostics({ infLinkAvailable: true }))).toBeUndefined()
+  })
+
+  it('is undefined after a deliberate stop', () => {
+    expect(infLinkDetail(diagnostics({ state: 'stopped' }))).toBeUndefined()
   })
 
   it('prefers the last error over the generic hint', () => {
@@ -72,32 +99,5 @@ describe('adapterView', () => {
     expect(adapterView('idle')).toEqual({ text: '待机', tone: 'neutral' })
     expect(adapterView('waiting')).toEqual({ text: '连接中', tone: 'neutral' })
     expect(adapterView('stopped')).toEqual({ text: '已停止', tone: 'neutral' })
-  })
-})
-
-describe('formatHeartbeat', () => {
-  beforeEach(() => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-08-28T12:00:00Z'))
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-  })
-
-  it('handles a missing timestamp', () => {
-    expect(formatHeartbeat(undefined)).toBe('暂无')
-  })
-
-  it('formats seconds below a minute', () => {
-    expect(formatHeartbeat(Date.now() - 30_000)).toBe('30 秒前')
-  })
-
-  it('formats minutes below an hour', () => {
-    expect(formatHeartbeat(Date.now() - 120_000)).toBe('2 分钟前')
-  })
-
-  it('formats hours beyond an hour', () => {
-    expect(formatHeartbeat(Date.now() - 7_200_000)).toBe('2 小时前')
   })
 })

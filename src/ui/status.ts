@@ -1,6 +1,5 @@
 import type { ServerStatus } from '../native'
 import type { SourceAdapterState, SourceDiagnostics } from '../source-adapter'
-import { SERVER_PORT } from '../native'
 
 export type StatusTone = 'ok' | 'err' | 'neutral'
 
@@ -14,22 +13,30 @@ export function statusValueClass(tone: StatusTone): string {
 }
 
 export function serverStatusView(status: ServerStatus): StatusView {
-  return status.state === 'up'
-    ? { text: `运行中 · ${SERVER_PORT}`, tone: 'ok' }
-    : { text: '未运行', tone: 'err' }
+  if (status.state === 'up') return { text: '运行中', tone: 'ok' }
+  switch (status.reason) {
+    case 'starting':
+      return { text: '启动中', tone: 'neutral' }
+    case 'failed':
+      return { text: '启动失败', tone: 'err' }
+    default:
+      return { text: '已停止', tone: 'neutral' }
+  }
 }
 
 export function infLinkView(diagnostics: SourceDiagnostics): StatusView {
-  return diagnostics.infLinkAvailable
-    ? { text: '在线', tone: 'ok' }
-    : { text: '离线', tone: 'err' }
+  if (diagnostics.state === 'stopped') return { text: '已断开', tone: 'neutral' }
+  if (diagnostics.infLinkAvailable) return { text: '在线', tone: 'ok' }
+  if (diagnostics.state === 'failed') return { text: '离线', tone: 'err' }
+  return { text: '离线', tone: 'neutral' }
 }
 
-const INFLINK_MISSING_DETAIL =
-  '未检测到 InfLink-rs：请确认已在 BetterNCM 中安装并启用，或版本过低（需要 ≥ 1.x）'
+const INFLINK_MISSING_DETAIL = '未检测到 InfLink-rs，或版本过低'
 
 export function infLinkDetail(diagnostics: SourceDiagnostics): string | undefined {
-  if (diagnostics.infLinkAvailable) return undefined
+  if (diagnostics.state === 'stopped' || diagnostics.infLinkAvailable) {
+    return undefined
+  }
   return diagnostics.lastError ?? INFLINK_MISSING_DETAIL
 }
 
@@ -45,16 +52,4 @@ export function adapterView(state: SourceAdapterState): StatusView {
   const text = ADAPTER_STATE_LABELS[state]
   if (state === 'running') return { text, tone: 'ok' }
   return { text, tone: state === 'failed' ? 'err' : 'neutral' }
-}
-
-export function formatHeartbeat(timestamp: number | undefined): string {
-  if (!timestamp) return '暂无'
-
-  const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000))
-  if (seconds < 60) return `${seconds} 秒前`
-
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes} 分钟前`
-
-  return `${Math.floor(minutes / 60)} 小时前`
 }
