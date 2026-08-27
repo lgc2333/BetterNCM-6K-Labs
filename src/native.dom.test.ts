@@ -1,7 +1,7 @@
-import type {Mock} from 'vitest';
+import type { Mock } from 'vitest'
 import type { ServerStatus } from './native'
 import type { NativeDispatchMessage } from './types'
-import { afterEach, beforeEach, describe, expect, it,  vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { NATIVE_API_IDS, NativeBridge, QUERY_URL, SERVER_PORT } from './native'
 
 interface NativePluginStub {
@@ -79,7 +79,6 @@ describe('nativeBridge', () => {
     }
 
     bridge.dispatch(payload)
-
   })
 
   it('flags structurally invalid results as failed without throwing', () => {
