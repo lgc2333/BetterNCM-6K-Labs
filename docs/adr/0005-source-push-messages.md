@@ -18,8 +18,7 @@ import type {
 type NativeSongInfo = Omit<SongInfo, 'cover'>
 
 type NativeDispatchMessage =
-  | { type: 'UpdateState'; payload: UpdateStatePayload }
-  | { type: 'Heartbeat' }
+  { type: 'UpdateState'; payload: UpdateStatePayload } | { type: 'Heartbeat' }
 
 interface UpdateStatePayload {
   song?: NativeSongInfo | null
@@ -39,3 +38,13 @@ interface CoverUpdate {
 ```
 
 Omitted `UpdateState` fields mean unchanged. `song: null` means no song and clears the native cache to `emptyQuery`, including cover. `Heartbeat` has no payload.
+
+## Considered Options
+
+- Send one `UpdateState` message containing InfLink-rs source facets and keep `Heartbeat` separate.
+- Send a different native message type for each playback facet.
+- Send a complete 6K Labs Query from JavaScript on every source event.
+
+## Consequences
+
+JavaScript remains a source adapter instead of a second playback cache or query mapper. Rust must merge partial source updates correctly, and `Heartbeat` cannot accidentally become a hidden state transport.

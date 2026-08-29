@@ -12,7 +12,9 @@ interface NativeApiMap {
   terminate: (args?: []) => string
   restart: (args?: []) => string
   getServerStatus: (args?: []) => string
-  registerServerStatusCallback: (args: [callback: (statusJson: string) => void]) => string
+  registerServerStatusCallback: (
+    args: [callback: (statusJson: string) => void],
+  ) => string
   dispatch: (args: [messageJson: string]) => string
 }
 ```
@@ -38,3 +40,13 @@ interface ServerStatus {
 ```
 
 `detail` carries concrete failure text such as bind errors. InfLink-rs availability, JavaScript adapter state, and source update errors belong to the settings panel diagnostics.
+
+## Considered Options
+
+- Keep lifecycle/status methods explicit and put playback updates behind one `dispatch` call.
+- Expose one native method for every playback facet update.
+- Encode detailed server failure categories as `reason` variants.
+
+## Consequences
+
+The JavaScript-facing native interface stays small, while playback protocol changes remain inside `dispatch` messages. `ServerStatus.reason` stays broad and stable; concrete bind/listen/stop failures are preserved in `detail`.
